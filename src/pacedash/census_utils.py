@@ -255,14 +255,13 @@ def total_census(center, start_date, end_date):
         result: total census for a given time range
     """
     params = [pd.to_datetime(start_date).date(),
-              pd.to_datetime(end_date).date(),
               pd.to_datetime(end_date).date()]
 
     center_sql, params = create_center_sql(center, params)
 
     query = f"""
     SELECT COUNT(*) FROM enrollment
-    WHERE (disenrollment_date BETWEEN ? and ?
+    WHERE (disenrollment_date >= ?
     OR disenrollment_date IS NULL)
     AND enrollment_date <= ?
     {center_sql};

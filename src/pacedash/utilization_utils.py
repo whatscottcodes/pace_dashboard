@@ -319,10 +319,13 @@ def build_visit_query(
             {filter_value_sql}
             {center_sql};
             """
-
+    print(query)
     df = sql_return_df(query, params, [date_type])
+    df['date_bby'] = df[date_type].copy()
     df[date_type] = df[date_type].dt.to_period(freq)
     df["count"] = 1
+    print(df[df[date_type]=='12-2018'])
+    print(df[df[date_type]=='12-2018'].shape)
     return df
 
 
@@ -1318,7 +1321,6 @@ def update_visit_graph(
     plot_df, plot_cols = filter_col_df(
         cols, filter_col, additional_filters, df, "count", amnt
     )
-
     if filtered_flag:
         total_df = build_visit_query(
             utl_type, date_type, cols, center, start_date, end_date, freq, None, None

@@ -24,7 +24,6 @@ def enrollment_by_town_table(start_date, end_date, center):
     """
     params = [pd.to_datetime(start_date).date(),
     pd.to_datetime(end_date).date(),
-    pd.to_datetime(end_date).date(),
         ]
 
     center_sql, params = create_center_sql(center, params)
@@ -32,7 +31,7 @@ def enrollment_by_town_table(start_date, end_date, center):
     query = f"""
         SELECT ad.city as 'City/Town', COUNT(*) as 'Number of Ppts' FROM addresses ad
         JOIN enrollment e ON ad.member_id=e.member_id
-        WHERE (disenrollment_date BETWEEN ? AND ?
+        WHERE (disenrollment_date >= ?
         OR disenrollment_date IS NULL)
         AND (enrollment_date <= ?)
         {center_sql}

@@ -873,7 +873,6 @@ def dementia_trend(start_date, end_date, center):
     params = [
         pd.to_datetime(start_date).date(),
         pd.to_datetime(end_date).date(),
-        pd.to_datetime(end_date).date(),
     ]
 
     center_sql, params = create_center_sql(center, params)
@@ -887,7 +886,7 @@ def dementia_trend(start_date, end_date, center):
         OR instr(icd10, 'F02') > 0
         OR instr(icd10, 'F03') > 0
         OR instr(icd10, 'G3') > 0)
-        AND (disenrollment_date BETWEEN ? AND ?
+        AND (disenrollment_date >= ?
         OR disenrollment_date IS NULL)
         AND (enrollment_date <= ?)
         {center_sql};
