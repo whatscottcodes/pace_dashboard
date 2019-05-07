@@ -319,13 +319,11 @@ def build_visit_query(
             {filter_value_sql}
             {center_sql};
             """
-    print(query)
+
     df = sql_return_df(query, params, [date_type])
     df['date_bby'] = df[date_type].copy()
     df[date_type] = df[date_type].dt.to_period(freq)
     df["count"] = 1
-    print(df[df[date_type]=='12-2018'])
-    print(df[df[date_type]=='12-2018'].shape)
     return df
 
 
@@ -1364,7 +1362,17 @@ def update_visit_graph(
         x_ticks = plot_df[date_type].astype(str)
     else:
         x_ticks = pd.Series([])
-    fig_layout = build_bar_layout("Utilization Visits", legend = legend, y_title=y_title, x_ticks=x_ticks)
+
+    if filtered_flag:
+        col_filter_text = " ".join(filter_col.split("_")).title()
+        if additional_filters[0] is None:
+            filter_title = f" by {col_filter_text}"
+        else:
+            filter_title = f" for {additional_filters[0]}({col_filter_text})"
+    else:
+        filter_title = ''
+    title_date = date_type.split("_")[0].title()
+    fig_layout = build_bar_layout(f"{utl_type.title()} {title_date}s{filter_title}", legend = legend, y_title=y_title, x_ticks=x_ticks)
 
     return dict(data=fig_data, layout=fig_layout)
 
