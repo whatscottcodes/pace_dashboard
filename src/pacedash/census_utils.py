@@ -384,24 +384,31 @@ def census_trend(start_date, end_date, freq, center):
     """
  
     plot_df = census_count_df(center, start_date, end_date, freq)
+    plot_df['Freq'] = plot_df['Freq'].dt.to_period(freq)
     if freq == "Q":
         eot = "Quarter"  # end of title
+        fig_data =  [go.Bar(
+                    x=plot_df["Freq"].astype(str),
+                    y=plot_df["Census"],
+                    marker={"color": color_palette[0]}
+                )]
+        fig_layout = build_bar_layout(f"Census by {eot}",
+                )
     else:
         eot = "Month"  # end of title
-
-    fig_data =  [go.Scatter(
-                    x=plot_df["Freq"],
+        fig_data =  [go.Scatter(
+                    x=plot_df["Freq"].astype(str),
                     y=plot_df["Census"],
                     mode="lines",
                     line={"width": 7, "color": color_palette[0]},
                 )]
     
-    if int(end_date.split('/')[2]) - int(start_date.split('/')[2]) <= 1:
-        x_ticks = plot_df['Freq']
-    else:
-        x_ticks = pd.Series([])
+        if (int(end_date.split('/')[2]) - int(start_date.split('/')[2]) <= 1):
+            x_ticks = plot_df['Freq']
+        else:
+            x_ticks = pd.Series([])
 
-    fig_layout = build_scatter_layout(f"Census by {eot}",
+        fig_layout = build_scatter_layout(f"Census by {eot}",
                     plot_df["Census"].min(),
                     plot_df["Census"].max(), x_ticks=x_ticks
                 )

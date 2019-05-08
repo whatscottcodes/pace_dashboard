@@ -1358,7 +1358,7 @@ def update_visit_graph(
         legend = {}
         y_title = 'Visits'
 
-    if ((end_date.month - start_date.month) < 6) & ((end_date.year - start_date.year) < 1):
+    if ((end_date.month - start_date.month) < 6) & ((end_date.year - start_date.year) < 1) & (freq != 'Q'):
         x_ticks = plot_df[date_type].astype(str)
     else:
         x_ticks = pd.Series([])
@@ -1463,7 +1463,7 @@ def update_los_graph(
     else:
         legend_names = plot_cols
 
-    if ((end_date.month - start_date.month) < 6) & ((end_date.year - start_date.year) < 1):
+    if ((end_date.month - start_date.month) < 6) & ((end_date.year - start_date.year) < 1) & (freq != 'Q'):
         x_ticks = plot_df['discharge_date'].astype(str)
     else:
         x_ticks = pd.Series([])

@@ -531,7 +531,7 @@ def update_graph(
 
     if (incident_details is None) or (len(incident_details) == 0):
         included_cols = (
-            plot_df.sum().sort_values(ascending=False)[: int(amount)].index.tolist()
+            plot_df[[col for col in plot_df.columns if col != 'date']].sum().sort_values(ascending=False)[: int(amount)].index.tolist()
         )
         plot_df = plot_df[["date"] + included_cols]
     else:
@@ -555,13 +555,13 @@ def update_graph(
             if (plot_df[col].sum()) != 0
         ]
 
-    if ((end_date.month - start_date.month) < 6) & ((end_date.year - start_date.year) < 1):
+    if ((end_date.month - start_date.month) < 6) & ((end_date.year - start_date.year) < 1) & (freq != 'Q'):
         x_ticks = plot_df['date'].astype(str)
     else:
         x_ticks = pd.Series([])
-
+    filter_title =" ".join(cols.split("_"))
     fig_layout = build_bar_layout(
-                f"Percent of {titlecase(incident)}",
+                f"Percent of {titlecase(incident)} by {titlecase(filter_title)}",
         legend = dict(orientation="h", y=-0.15, font={'size':9.5}), y_title='Percent',
         x_ticks=x_ticks
     )
@@ -633,7 +633,7 @@ def update_trending_graph(incident, start_date, end_date, freq, measure, center,
             )
         ]
 
-    if ((end_date.month - start_date.month) < 6) & ((end_date.year - start_date.year) < 1):
+    if ((end_date.month - start_date.month) < 6) & ((end_date.year - start_date.year) < 1) & (freq != 'Q'):
         x_ticks = plot_df['date'].astype(str)
     else:
         x_ticks = pd.Series([])
