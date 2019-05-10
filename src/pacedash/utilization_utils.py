@@ -1300,7 +1300,6 @@ def update_visit_graph(
 
     if filtered_flag:
         cols.extend([filter_col])
-
     df = build_visit_query(
         utl_type,
         date_type,
@@ -1319,6 +1318,7 @@ def update_visit_graph(
     plot_df, plot_cols = filter_col_df(
         cols, filter_col, additional_filters, df, "count", amnt
     )
+
     if filtered_flag:
         total_df = build_visit_query(
             utl_type, date_type, cols, center, start_date, end_date, freq, None, None
