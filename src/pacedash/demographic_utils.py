@@ -1145,7 +1145,7 @@ def attnd_day_center(start_date, end_date, center):
     center_sql, params = create_center_sql(center, params)
 
     query = f"""
-        SELECT COUNT(cd.member_id)
+        SELECT COUNT(DISTINCT(cd.member_id))
         FROM center_days cd
         JOIN enrollment e ON cd.member_id = e.member_id
         WHERE (e.disenrollment_date >= ? OR e.disenrollment_date IS NULL)

@@ -195,7 +195,7 @@ def month_dict_key(freq_start):
     """    
     return str(freq_start)
 
-def census_count_df(center, start_date, end_date, freq, quarter_pmpm=False):
+def census_count_df(center, start_date, end_date, freq, quarter_pmpm=False, as_of_first=False):
     """
     Creates pandas dataframe of census count for each month
     or quarter in a given date range, filtered by center
@@ -225,8 +225,15 @@ def census_count_df(center, start_date, end_date, freq, quarter_pmpm=False):
     census_dict = {}
 
     count_func, dict_key = counter_func_dict[freq]
-
-    for freq_start in create_daterange(start_date, end_date, freq):
+    
+    update = True
+    if as_of_first:
+        start_date = pd.to_datetime(start_date) - pd.offsets.MonthBegin(1)
+        end_date = pd.to_datetime(end_date) + pd.offsets.MonthEnd(1)
+        update = False
+        
+    for freq_start in create_daterange(start_date, end_date, freq, update=update):
+        print(freq_start)
         census_dict[dict_key(freq_start)] = count_func(
             df, freq_start, quarter_pmpm)
 
@@ -383,7 +390,7 @@ def census_trend(start_date, end_date, freq, center):
          dict: contianging plotly figure data and layout information
     """
  
-    plot_df = census_count_df(center, start_date, end_date, freq)
+    plot_df = census_count_df(center, start_date, end_date, freq, as_of_first=True)
     plot_df['Freq'] = plot_df['Freq'].dt.to_period(freq)
     if freq == "Q":
         eot = "Quarter"  # end of title
@@ -442,8 +449,10 @@ def enrollment_changes(start_date, end_date, freq, center):
     df["disenrollment_date"] = df["disenrollment_date"].dt.to_period(freq)
 
     enrollment_dict = {}
+    start_date = pd.to_datetime(start_date) - pd.offsets.MonthBegin(1)
+    end_date = pd.to_datetime(end_date) + pd.offsets.MonthEnd(1)
 
-    for single_date in create_daterange(start_date, end_date, freq):
+    for single_date in create_daterange(start_date, end_date, freq, update=False):
         single_date = single_date.to_period(freq)
         if freq == "Q":
             dict_key = str(single_date.year) + quarter_dict[single_date.month]
