@@ -233,7 +233,6 @@ def census_count_df(center, start_date, end_date, freq, quarter_pmpm=False, as_o
         update = False
         
     for freq_start in create_daterange(start_date, end_date, freq, update=update):
-        print(freq_start)
         census_dict[dict_key(freq_start)] = count_func(
             df, freq_start, quarter_pmpm)
 
