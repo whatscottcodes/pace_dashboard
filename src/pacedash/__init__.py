@@ -29,8 +29,9 @@ def create_dash(server):
     app.title = server.config["TITLE"]
     app.config.routes_pathname_prefix = server.config["ROUTES_PATHNAME_PREFIX"]
 
-    # Suppress callback validation as we will be initialising callbacks that target
+    # Suppress callback validation as we will be initializing callbacks that target
     # element IDs that won't yet occur in the layout.
     app.config.supress_callback_exceptions = True
-
+    app.css.config.serve_locally = True
+    app.scripts.config.serve_locally = True
     return app

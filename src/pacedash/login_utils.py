@@ -1,13 +1,12 @@
-import dash_html_components as html
-from .users_mgt import add_user
 import re
 import sqlite3
-from .helpers_configs import user_db
+import dash_html_components as html
+from .users_mgt import add_user
+from .settings import user_db
 from .app import User
 from flask_login import login_user
 from werkzeug.security import check_password_hash
 from .users_mgt import add_user
-
 
 
 def redirect_to_login(n_clicks):
@@ -15,9 +14,10 @@ def redirect_to_login(n_clicks):
     Redirects user to login page if button is pressed
     """
     if n_clicks > 0:
-        return '/login'
+        return "/login"
 
-#password/login functions
+
+# password/login functions
 def validate(password):
     """
     Validates that the set password matches the restrictions
@@ -26,29 +26,30 @@ def validate(password):
         At least 2 numbers
         At least 1 capital letter
         No spaces
-        At least 1 special charactr (cannot be * or ;)
+        At least 1 special character (cannot be * or ;)
 
     Args:
         password: password user has created
     
     Returns:
         Bool: True if valid, False if not
-        Str: Error message is not valie, empty if valid
+        Str: Error message is not valid, empty if valid
     """
     if len(password) < 8:
-        return False, "Make sure your password is at lest 8 letters"
+        return False, "Make sure your password is at least 8 letters"
     elif sum(map(str.isdigit, password)) < 2:
-        return False, "Make sure your password has atleast 2 numbers in it"
-    elif re.search('[A-Z]',password) is None: 
-        return False, "Make sure your password has atleast one capital letter in it"
+        return False, "Make sure your password has at least 2 numbers in it"
+    elif re.search("[A-Z]", password) is None:
+        return False, "Make sure your password has at least one capital letter in it"
     elif re.search(r"\s", password) is not None:
         return False, "Make sure your password does not contains any spaces"
     elif re.match("^[a-zA-Z0-9_]*$", password) is not None:
-        return False, 'Make sure your password has a special chartacter'
-    elif ('*' in password) or (';' in password) or ('=' in password):
-        return False, '* or ; is not allowed'
+        return False, "Make sure your password has a special character"
+    elif ("*" in password) or (";" in password) or ("=" in password):
+        return False, "* or ; is not allowed"
 
-    return True , ''
+    return True, ""
+
 
 def check_user(username, password):
     """
@@ -66,10 +67,10 @@ def check_user(username, password):
         Link to login or error message.
     """
     if re.search(r"\s", username) is not None:
-        return 'User does not exist'
-    if ('*' in username) or ('=' in username) or (';' in username):
-        return 'User does not exist'
-    
+        return "User does not exist"
+    if ("*" in username) or ("=" in username) or (";" in username):
+        return "User does not exist"
+
     conn = sqlite3.connect(user_db)
     c = conn.cursor()
 
@@ -81,11 +82,11 @@ def check_user(username, password):
         user, email, has_password = c.execute(q, [username]).fetchone()
     except TypeError:
         conn.close()
-        return 'User does not exist'
-    
+        return "User does not exist"
+
     if has_password == 0:
         if validate(password)[0]:
-            add_user(f"{user}",password,f"{email}")
+            add_user(f"{user}", password, f"{email}")
             update_usernames = """
                 UPDATE usernames
                 SET has_password = 1
@@ -95,13 +96,28 @@ def check_user(username, password):
             conn.commit()
             conn.close()
         else:
-            return html.P(validate(password)[1], style={'text-align':'center', 'font-size':'2vmin', 'content-align':'center', "padding-top": "2.5vh"})
+            return html.P(
+                validate(password)[1],
+                style={
+                    "text-align": "center",
+                    "font-size": "2vmin",
+                    "content-align": "center",
+                    "padding-top": "2.5vh",
+                },
+            )
     else:
-        return 'Password already set'
-        
-    
-    return html.A('Password created, please login',
-            href="/login",
-            style={"display": "flex",
-                "flex-direction": "row", 'padding':0,
-                "justify-content": "flex-start", "align-items": "flex-start", 'font-size':'2vmin'})
+        return "Password already set"
+
+    return html.A(
+        "Password created, please login",
+        href="/login",
+        style={
+            "display": "flex",
+            "flex-direction": "row",
+            "padding": 0,
+            "justify-content": "flex-start",
+            "align-items": "flex-start",
+            "font-size": "2vmin",
+        },
+    )
+

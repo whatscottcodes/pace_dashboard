@@ -4,535 +4,496 @@ from dash.dependencies import Input, Output
 
 from ..app import app
 from ..components import Col, Row
-from ..helpers_configs import dropdown_style, color_palette, update_dates
-from ..layouts import (
-    center_team_dropdown_col,
-    select_date_col,
-    month_quarter_radio,
-    graph_drop_with_filter_amnt,
-    equal_graph_row,
-    small_trend_graph,
-    card_col,
+from ..helper_functions import (
+    enrollment,
+    demographics,
+    incidents,
+    utilization,
+    agg,
+    sparkline,
+    arrow_direction,
+    indicator_color,
+    time_range_dict,
+    card_value
 )
-from ..incidents_utils import (
-    drop_downs,
-    total_incidents,
-    incidents_per100mm,
-    update_graph,
-    card_three_title,
-    repeat_ppts,
-    percent_without_incident,
-    update_trending_graph,
-    incident_details_options,
-    incident_types_dropdown,
-    create_card_three,
+from ..settings import color_palette
+from ..layouts import (
+    card_col,
+    indicator_header,
+    left_number_right_spark,
+    text_val_no_sparkline
 )
 
 layout = html.Div(
     [
+       Row(indicator_header("Incidents"), className="header-row"),
+       Row([Col([
+             html.H4("Falls",)
+            ], size = 12, style = {"text-align": "left",
+                                "justify-content": "center",
+                                "flex-direction": "column",
+                                "display": "flex"})], style={"margin-top":"1vmax", "margin-bottom":"0.5vmax"}),
         Row(
             [
-                center_team_dropdown_col(),
-                select_date_col(),
-                Col(
-                    [
-                        dcc.Dropdown(
-                            id="incident-drop",
-                            options=incident_types_dropdown,
-                            value="falls",
-                            style=dropdown_style,
-                        ),
-                        Row(
-                            [
-                                Col(
-                                    [
-                                        dcc.RadioItems(
-                                            id="measure-radio",
-                                            options=[
-                                                {"label": "Total", "value": "total"},
-                                                {"label": "Per100", "value": "pmpm"},
-                                            ],
-                                            value="total",
-                                        )
-                                    ],
-                                    bp="md",
-                                    size=6,
-                                    mobile_size=6,
-                                    style={
-                                        "padding-right": 0,
-                                        "display": "flex",
-                                        "flex-direction": "column",
-                                        "justify-content": "center",
-                                    },
-                                ),
-                                Col(
-                                    [month_quarter_radio()],
-                                    bp="md",
-                                    size=6,
-                                    mobile_size=6,
-                                    style={
-                                        "padding-left": 0,
-                                        "display": "flex",
-                                        "flex-direction": "column",
-                                        "justify-content": "center",
-                                    },
-                                ),
-                            ],
-                            style={
-                                "display": "flex",
-                                "flex-direction": "row",
-                                "justify-content": "flex-start",
-                                "align-items": "center",
-                            },
-                        ),
-                    ],
-                    bp="md",
-                    size=3,
-                    style={
-                        "padding-top": "0.5vh",
-                        "display": "flex",
-                        "flex-direction": "column",
-                        "justify-content": "center",
-                    },
+                card_col(
+                    card_title="Falls per 100MM",
+                    card_val_id="card-1-incidents",
+                    color=color_palette[1],
+                    font_size="1.25vmax",
                 ),
-                graph_drop_with_filter_amnt(
-                    "graph-one-drop", "location", "graph-one-radio", "incident-options"
+                card_col(
+                    card_title="Ppts with Fall",
+                    card_val_id="card-2-incidents",
+                    color=color_palette[1],
+                    font_size="1.25vmax",
                 ),
-                graph_drop_with_filter_amnt(
-                    "graph-two-drop",
-                    "activity_at_time_of_fall",
-                    "graph-two-radio",
-                    "incident-options-two",
+                card_col(
+                    card_title="Falls by Repeaters(%)",
+                    card_val_id="card-3-incidents",
+                    color=color_palette[1],
+                    font_size="1.25vmax",
+                ),
+                card_col(
+                    card_title="Ppts Without Fall(%)",
+                    card_val_id="card-4-incidents",
+                    color=color_palette[1],
+                    font_size="1.25vmax",
+                ),
+                card_col(
+                    card_title="Major Harm/Death",
+                    card_val_id="card-5-incidents",
+                    color=color_palette[1],
+                    font_size="1.25vmax",
+                ),
+                card_col(
+                    card_title="Fall per 100MM(adjusted)",
+                    card_val_id="card-6-incidents",
+                    color=color_palette[1],
+                    font_size="1.25vmax",
                 ),
             ],
-            className="options-row",
+            className="equal-row", style={"border-bottom-style": "ridge"}
         ),
-        equal_graph_row("graph-one", "graph-two"),
+        Row([Col([
+             html.H4("Infections",)
+            ], size = 12, style = {"text-align": "left",
+                                "justify-content": "center",
+                                "flex-direction": "column",
+                                "display": "flex"})], style={"margin-top":"1vmax", "margin-bottom":"0.5vmax"}),
         Row(
             [
-                small_trend_graph("incident-trending-graph"),
+                card_col(
+                    card_title="Infections per 100MM",
+                    card_val_id="card-7-incidents",
+                    color=color_palette[3],
+                    font_size="1.25vmax",
+                ),
+                card_col(
+                    card_title="Ppts with Infection",
+                    card_val_id="card-8-incidents",
+                    color=color_palette[3],
+                    font_size="1.25vmax",
+                ),
+                card_col(
+                    card_title="Infections by Repeaters(%)",
+                    card_val_id="card-9-incidents",
+                    color=color_palette[3],
+                    font_size="1.25vmax",
+                ),
+                card_col(
+                    card_title="Ppts Without Infection(%)",
+                    card_val_id="card-10-incidents",
+                    color=color_palette[3],
+                    font_size="1.25vmax",
+                ),
+                card_col(
+                    card_title="Sepsis",
+                    card_val_id="card-11-incidents",
+                    color=color_palette[3],
+                    font_size="1.25vmax",
+                ),
+                card_col(
+                    card_title="UTI per 100MM",
+                    card_val_id="card-12-incidents",
+                    color=color_palette[3],
+                    font_size="1.25vmax",
+                ),
+            ],
+            className="equal-row", style={"border-bottom-style": "ridge"}
+        ),
+        Row([Col([
+             html.H4("Medication Errors",)
+            ], size = 12, style = {"text-align": "left",
+                                "justify-content": "center",
+                                "flex-direction": "column",
+                                "display": "flex"})], style={"margin-top":"1vmax", "margin-bottom":"0.5vmax"}),
+        Row(
+            [
+                card_col(
+                    card_title="Med Errors per 100MM",
+                    card_val_id="card-13-incidents",
+                    color=color_palette[1],
+                    font_size="1.25vmax",
+                ),
+                card_col(
+                    card_title="Ppts with Med Error",
+                    card_val_id="card-14-incidents",
+                    color=color_palette[1],
+                    font_size="1.25vmax",
+                ),
+                card_col(
+                    card_title="Most Common Responsibility",
+                    card_val_id="card-15-incidents",
+                    color=color_palette[1],
+                    font_size="1.25vmax",
+                ),
+                card_col(
+                    card_title="Ppts Without Med Error(%)",
+                    card_val_id="card-16-incidents",
+                    color=color_palette[1],
+                    font_size="1.25vmax",
+                ),
+                card_col(
+                    card_title="Major Harm/Death",
+                    card_val_id="card-17-incidents",
+                    color=color_palette[1],
+                    font_size="1.25vmax",
+                ),
+                card_col(
+                    card_title="High Risk Related",
+                    card_val_id="card-18-incidents",
+                    color=color_palette[1],
+                    font_size="1.25vmax",
+                ),
+            ],
+            className="equal-row", style={"border-bottom-style": "ridge"}
+        ),
+        Row([Col([
+             html.H4("Wounds",)
+            ], size = 12, style = {"text-align": "left",
+                                "justify-content": "center",
+                                "flex-direction": "column",
+                                "display": "flex"})], style={"margin-top":"1vmax", "margin-bottom":"0.5vmax"}),
+        Row(
+            [
+                card_col(
+                    card_title="Wounds per 100MM",
+                    card_val_id="card-19-incidents",
+                    color=color_palette[3],
+                    font_size="1.25vmax",
+                ),
+                card_col(
+                    card_title="Ppts with Wound",
+                    card_val_id="card-20-incidents",
+                    color=color_palette[3],
+                    font_size="1.25vmax",
+                ),
+                card_col(
+                    card_title="Avg. Wound Healing Time",
+                    card_val_id="card-21-incidents",
+                    color=color_palette[3],
+                    font_size="1.25vmax",
+                ),
+                card_col(
+                    card_title="Ppts Without Wound(%)",
+                    card_val_id="card-22-incidents",
+                    color=color_palette[3],
+                    font_size="1.25vmax",
+                ),
+                card_col(
+                    card_title="Unstageable",
+                    card_val_id="card-23-incidents",
+                    color=color_palette[3],
+                    font_size="1.25vmax",
+                ),
+                card_col(
+                    card_title="Pressure Ulcer per 100MM",
+                    card_val_id="card-24-incidents",
+                    color=color_palette[3],
+                    font_size="1.25vmax",
+                ),
+            ],
+            className="equal-row", style={"border-bottom-style": "ridge"}
+        ),
+        Row([Col([
+             html.H4("Burns",)
+            ], size = 12, style = {"text-align": "left",
+                                "justify-content": "center",
+                                "flex-direction": "column",
+                                "display": "flex"})], style={"margin-top":"1vmax", "margin-bottom":"0.5vmax"}),
+        Row(
+            [
+                card_col(
+                    card_title="Burns per 100MM",
+                    card_val_id="card-25-incidents",
+                    color=color_palette[1],
+                    font_size="1.25vmax",
+                ),
+                card_col(
+                    card_title="Ppts with Burn",
+                    card_val_id="card-26-incidents",
+                    color=color_palette[1],
+                    font_size="1.25vmax",
+                ),
+                card_col(
+                    card_title="Burns by Repeaters(%)",
+                    card_val_id="card-27-incidents",
+                    color=color_palette[1],
+                    font_size="1.25vmax",
+                ),
+                card_col(
+                    card_title="Ppts Without Burn(%)",
+                    card_val_id="card-28-incidents",
+                    color=color_palette[1],
+                    font_size="1.25vmax",
+                ),
+                card_col(
+                    card_title="3rd Degree+",
+                    card_val_id="card-29-incidents",
+                    color=color_palette[1],
+                    font_size="1.25vmax",
+                ),
+                card_col(
+                    card_title="RN Assessment (%)",
+                    card_val_id="card-30-incidents",
+                    color=color_palette[1],
+                    font_size="1.25vmax",
+                ),
+            ],
+            className="equal-row"
+        ),
+        Row(
+            [
                 Col(
                     [
-                        Row(
+                        Col(
                             [
-                                card_col(
-                                    "Total",
-                                    "total-card",
-                                    color_palette[3],
-                                    size=4,
-                                    height="100%",
-                                ),
-                                card_col(
-                                    "Per 100MM",
-                                    "pmpm-card",
-                                    color_palette[3],
-                                    size=4,
-                                    height="100%",
-                                ),
-                                card_col(
-                                    "",
-                                    "level-2-card",
-                                    color_palette[3],
-                                    size=4,
-                                    title_id="level-2-card-title",
-                                    height="100%",
-                                ),
+                                dcc.Link(
+                                    html.H6("Demo. EDA", style={
+                                            "font-size": "1vmax"}),
+                                    href="/demographics-eda",
+                                )
                             ],
+                            size=2,
                             style={
                                 "display": "flex",
                                 "flex-direction": "row",
                                 "justify-content": "center",
-                                "align-items": "center",
                             },
                         ),
-                        Row(
+                        Col(
                             [
-                                card_col(
-                                    "Repeat Ppts",
-                                    "repeat-ppts-card",
-                                    color_palette[1],
-                                    size=4,
-                                    height="100%",
-                                ),
-                                card_col(
-                                    "% No Incidents",
-                                    "without-incident-card",
-                                    color_palette[1],
-                                    size=4,
-                                    height="100%",
-                                ),
-                                Col(
-                                    [
-                                        dcc.RadioItems(
-                                            id="outlier-radio",
-                                            options=[
-                                                {"label": "All", "value": False},
-                                                {
-                                                    "label": "Exclude Outliers",
-                                                    "value": True,
-                                                },
-                                            ],
-                                            value=False,
-                                            style={
-                                                "display": "flex",
-                                                "flex-direction": "row",
-                                                "justify-content": "flex-end",
-                                                "align-items": "center",
-                                            },
-                                        )
-                                    ],
-                                    bp="md",
-                                    size=4,
-                                    mobile_size=4,
-                                    style={
-                                        "display": "flex",
-                                        "flex-direction": "row",
-                                        "justify-content": "center",
-                                        "align-items": "center",
-                                    },
-                                ),
+                                dcc.Link(
+                                    html.H6(
+                                        "Enroll. EDA", style={"font-size": "1vmax"}
+                                    ),
+                                    href="/enrollment-eda",
+                                )
                             ],
+                            size=2,
                             style={
                                 "display": "flex",
                                 "flex-direction": "row",
                                 "justify-content": "center",
-                                "align-items": "center",
-                                "margin-top": "1vh",
+                            },
+                        ),
+                        Col(
+                            [
+                                dcc.Link(
+                                    html.H6(
+                                        "Incidents EDA", style={"font-size": "1vmax"}
+                                    ),
+                                    href="/incidents-eda",
+                                )
+                            ],
+                            size=2,
+                            style={
+                                "display": "flex",
+                                "flex-direction": "row",
+                                "justify-content": "center",
+                            },
+                        ),
+                        Col(
+                            [
+                                dcc.Link(
+                                    html.H6(
+                                        "Utl. EDA", style={"font-size": "1vmax"}
+                                    ),
+                                    href="/utilization-eda",
+                                )
+                            ],
+                            size=2,
+                            style={
+                                "display": "flex",
+                                "flex-direction": "row",
+                                "justify-content": "center",
+                            },
+                        ),
+                        Col(
+                            [
+                                dcc.Link(
+                                    html.H6("Town Table", style={
+                                            "font-size": "1vmax"}),
+                                    href="/town_count",
+                                )
+                            ],
+                            size=2,
+                            style={
+                                "display": "flex",
+                                "flex-direction": "row",
+                                "justify-content": "center",
                             },
                         ),
                     ],
                     size=6,
-                ),
+                    mobile_size=12,
+                    style={
+                        "display": "flex",
+                        "flex-direction": "row",
+                        "justify-content": "center",
+                        "align-items": "flex-end",
+                    },
+                )
             ],
-            className="bottom-row",
+            style={
+                "margin-top": "0",
+                "height": "4vh",
+                "display": "flex",
+                "flex-direction": "row",
+                "justify-content": "flex-end",
+                "align-items": "flex-end",
+            },
         ),
     ]
 )
 
 
-@app.callback(Output("graph-one-drop", "options"), [Input("incident-drop", "value")])
-def graph_one_dd_options(selected_incident):
-    """
-    Returns dropdown options that
-    can be used to group the data
-    based on the indicent type
-    """
-    return [
-        {"label": i.replace("_", " ").title(), "value": i}
-        for i in drop_downs[selected_incident]
-    ]
+@app.callback(Output("card-1-incidents", "children"), [Input("time_range", "value")])
+def card_val_1_incident(time_range):
+    return card_value(time_range, incidents.incident_per_100MM, "falls", "per_100MM", left_number_right_spark, ["falls"])
 
+@app.callback(Output("card-2-incidents", "children"), [Input("time_range", "value")])
+def card_val_2_incident(time_range):
+    return card_value(time_range, incidents.ppts_w_incident, "falls", "unique_ppts", left_number_right_spark, ["falls"])
 
-@app.callback(Output("graph-one-drop", "value"), [Input("graph-one-drop", "options")])
-def graph_one_dd_value(available_options):
-    """
-    Returns the default value for the selected
-    drop down grouping option
-    """
-    return available_options[0]["value"]
+@app.callback(Output("card-3-incidents", "children"), [Input("time_range", "value")])
+def card_val_3_incident(time_range):
+    return card_value(time_range, incidents.percent_by_repeaters, "falls", "percent_by_repeaters", left_number_right_spark, ["falls"])
 
+@app.callback(Output("card-4-incidents", "children"), [Input("time_range", "value")])
+def card_val_4_incident(time_range):
+    return card_value(time_range, incidents.percent_without_incident_in_period, "falls", "percent_without", left_number_right_spark, ["falls"])
 
-@app.callback(
-    Output("incident-options", "options"),
-    [
-        Input("start_date", "value"),
-        Input("end_date", "value"),
-        Input("incident-drop", "value"),
-        Input("graph-one-drop", "value"),
-        Input("graph-one-radio", "value"),
-        Input("center-drop", "value"),
-    ],
-)
-def incident_one_details(
-    start_date, end_date, selected_incident, selected_cols, amount, center
-):
-    """
-    Retuns a dictionary of additional incident options if there
-    are more options than the selected amount to be plotted
-    """
-    start_date, end_date = update_dates(start_date, end_date, "Q")
+@app.callback(Output("card-5-incidents", "children"), [Input("time_range", "value")])
+def card_val_5_incident(time_range):
+    return card_value(time_range, incidents.major_harm_percent, "falls", "major_harm_percent", left_number_right_spark, ["falls"])
 
-    return incident_details_options(
-        start_date, end_date, selected_incident, selected_cols, amount, center
-    )
+@app.callback(Output("card-6-incidents", "children"), [Input("time_range", "value")])
+def card_val_6_incident(time_range):
+    return card_value(time_range, incidents.adjusted_per_100MM, "falls", "adjusted_per100MM", left_number_right_spark, ["falls"])
 
+@app.callback(Output("card-7-incidents", "children"), [Input("time_range", "value")])
+def card_val_7_incident(time_range):
+    return card_value(time_range, incidents.incident_per_100MM, "infections", "per_100MM", left_number_right_spark, ["infections"])
 
-@app.callback(Output("incident-options", "value"), [Input("graph-one-drop", "value")])
-def incident_one_value(arg):
-    """
-    Retuns None for additional incident options when graph option dropdown is changed
-    """
+@app.callback(Output("card-8-incidents", "children"), [Input("time_range", "value")])
+def card_val_8_incident(time_range):
+    return card_value(time_range, incidents.ppts_w_incident, "infections", "unique_ppts", left_number_right_spark, ["infections"])
 
-    return None
+@app.callback(Output("card-9-incidents", "children"), [Input("time_range", "value")])
+def card_val_9_incident(time_range):
+    return card_value(time_range, incidents.percent_by_repeaters, "infections", "percent_by_repeaters", left_number_right_spark, ["infections"])
 
+@app.callback(Output("card-10-incidents", "children"), [Input("time_range", "value")])
+def card_val_10_incident(time_range):
+    return card_value(time_range, incidents.percent_without_incident_in_period, "infections", "percent_without", left_number_right_spark, ["infections"])
 
-@app.callback(
-    Output("incident-options-two", "options"),
-    [
-        Input("start_date", "value"),
-        Input("end_date", "value"),
-        Input("incident-drop", "value"),
-        Input("graph-two-drop", "value"),
-        Input("graph-two-radio", "value"),
-        Input("center-drop", "value"),
-    ],
-)
-def incident_two_details(
-    start_date, end_date, selected_incident, selected_cols, amount, center
-):
-    """
-    Retuns a dictionary of additional incident options if there
-    are more options than the selected amount to be plotted
-    """
-    start_date, end_date = update_dates(start_date, end_date, "Q")
-    return incident_details_options(
-        start_date, end_date, selected_incident, selected_cols, amount, center
-    )
+@app.callback(Output("card-11-incidents", "children"), [Input("time_range", "value")])
+def card_val_11_incident(time_range):
+    return card_value(time_range, incidents.sepsis_per_100, "infections", "sepsis_per_100MM", left_number_right_spark)
 
+@app.callback(Output("card-12-incidents", "children"), [Input("time_range", "value")])
+def card_val_12_incident(time_range):
+    return card_value(time_range, incidents.uti_per_100, "infections", "uti_per_100MM", left_number_right_spark)
 
-@app.callback(
-    Output("incident-options-two", "value"), [Input("graph-two-drop", "value")]
-)
-def incident_two_value(arg):
-    """
-    Retuns None for additional incident options when graph option dropdown is changed
-    """
+@app.callback(Output("card-13-incidents", "children"), [Input("time_range", "value")])
+def card_val_13_incident(time_range):
+    return card_value(time_range, incidents.incident_per_100MM, "med_errors", "per_100MM", left_number_right_spark, ["med_errors"])
 
-    return None
+@app.callback(Output("card-14-incidents", "children"), [Input("time_range", "value")])
+def card_val_14_incident(time_range):
+    return card_value(time_range, incidents.ppts_w_incident, "med_errors", "unique_ppts", left_number_right_spark, ["med_errors"])
 
+@app.callback(Output("card-15-incidents", "children"), [Input("time_range", "value")])
+def card_val_15_incident(time_range):
+    params = time_range_dict[time_range][0]()
 
-@app.callback(Output("graph-two-drop", "options"), [Input("incident-drop", "value")])
-def graph_two_dd_options(selected_incident):
-    """
-    Returns dropdown options that
-    can be used to group the data
-    based on the indicent type
-    """
-    return [
-        {"label": i.replace("_", " ").title(), "value": i}
-        for i in drop_downs[selected_incident]
-    ]
+    current_value = incidents.most_common_med_errors_responsibility(params)
+    total = incidents.total_incidents(params, incident_table="med_errors")
+    
+    if total == 0:
+        return text_val_no_sparkline(f"{current_value[0]}(0%)", "incidents-eda")
+   
+    percent = int(current_value[1]) /  total* 100
 
+    return text_val_no_sparkline(f"{current_value[0]}({round(percent,2)}%)", "incidents-eda")
 
-@app.callback(Output("graph-two-drop", "value"), [Input("graph-two-drop", "options")])
-def graph_two_dd_value(available_options):
-    """
-    Returns the default value for the selected
-    drop down grouping option
-    """
-    return available_options[1]["value"]
+@app.callback(Output("card-16-incidents", "children"), [Input("time_range", "value")])
+def card_val_16_incident(time_range):
+    return card_value(time_range, incidents.percent_without_incident_in_period, "med_errors", "percent_without", left_number_right_spark, ["med_errors"])
 
+@app.callback(Output("card-17-incidents", "children"), [Input("time_range", "value")])
+def card_val_17_incident(time_range):
+    return card_value(time_range, incidents.major_harm_percent, "med_errors", "major_harm_percent", left_number_right_spark, ["med_errors"])
 
-@app.callback(
-    Output("graph-one", "figure"),
-    [
-        Input("incident-drop", "value"),
-        Input("start_date", "value"),
-        Input("end_date", "value"),
-        Input("freq-radio", "value"),
-        Input("graph-one-drop", "value"),
-        Input("incident-options", "value"),
-        Input("graph-one-radio", "value"),
-        Input("center-drop", "value"),
-        Input("outlier-radio", "value"),
-    ],
-)
-def update_graph_one(
-    incident,
-    start_date,
-    end_date,
-    freq,
-    cols,
-    incident_details,
-    amount,
-    center,
-    remove_outliers,
-):
-    """
-    Updates left graph based on dates, selected incident, and
-    grouping drop down choices
-    """
-    start_date, end_date = update_dates(start_date, end_date, freq)
-    return update_graph(
-        incident,
-        start_date,
-        end_date,
-        freq,
-        cols,
-        incident_details,
-        amount,
-        center,
-        remove_outliers,
-    )
+@app.callback(Output("card-18-incidents", "children"), [Input("time_range", "value")])
+def card_val_18_incident(time_range):
+    return card_value(time_range, incidents.high_risk_med_error_count, "med_errors", "high_risk", left_number_right_spark)
 
+@app.callback(Output("card-19-incidents", "children"), [Input("time_range", "value")])
+def card_val_19_incident(time_range):
+    return card_value(time_range, incidents.incident_per_100MM, "wounds", "per_100MM", left_number_right_spark, ["wounds"])
 
-@app.callback(
-    Output("graph-two", "figure"),
-    [
-        Input("incident-drop", "value"),
-        Input("start_date", "value"),
-        Input("end_date", "value"),
-        Input("freq-radio", "value"),
-        Input("graph-two-drop", "value"),
-        Input("incident-options-two", "value"),
-        Input("graph-two-radio", "value"),
-        Input("center-drop", "value"),
-        Input("outlier-radio", "value"),
-    ],
-)
-def update_graph_two(
-    incident,
-    start_date,
-    end_date,
-    freq,
-    cols,
-    incident_details,
-    amount,
-    center,
-    remove_outliers,
-):
-    """
-    Updates right graph based on dates, selected incident, and
-    grouping drop down choices
-    """
-    start_date, end_date = update_dates(start_date, end_date, freq)
-    return update_graph(
-        incident,
-        start_date,
-        end_date,
-        freq,
-        cols,
-        incident_details,
-        amount,
-        center,
-        remove_outliers,
-    )
+@app.callback(Output("card-20-incidents", "children"), [Input("time_range", "value")])
+def card_val_20_incident(time_range):
+    return card_value(time_range, incidents.ppts_w_incident, "wounds", "unique_ppts", left_number_right_spark, ["wounds"])
 
+@app.callback(Output("card-21-incidents", "children"), [Input("time_range", "value")])
+def card_val_21_incident(time_range):
+    return card_value(time_range, incidents.avg_wound_healing_time, "wounds", "avg_healing_time", left_number_right_spark)
 
-@app.callback(
-    Output("incident-trending-graph", "figure"),
-    [
-        Input("incident-drop", "value"),
-        Input("start_date", "value"),
-        Input("end_date", "value"),
-        Input("freq-radio", "value"),
-        Input("measure-radio", "value"),
-        Input("center-drop", "value"),
-        Input("outlier-radio", "value"),
-    ],
-)
-def update_graph_trending(
-    incident, start_date, end_date, freq, measure, center, remove_outliers
-):
-    """
-    Updates trend graph in bottom row based on dates, selected incident,
-    freq and total vs pmpm choices
-    """
-    start_date, end_date = update_dates(start_date, end_date, freq)
-    return update_trending_graph(
-        incident, start_date, end_date, freq, measure, center, remove_outliers
-    )
+@app.callback(Output("card-22-incidents", "children"), [Input("time_range", "value")])
+def card_val_22_incident(time_range):
+    return card_value(time_range, incidents.percent_without_incident_in_period, "wounds", "percent_without", left_number_right_spark, ["wounds"])
 
+@app.callback(Output("card-23-incidents", "children"), [Input("time_range", "value")])
+def card_val_23_incident(time_range):
+    return card_value(time_range, incidents.unstageable_wound_percent, "wounds", "percent_unstageable", left_number_right_spark)
 
-@app.callback(
-    Output("total-card", "children"),
-    [
-        Input("incident-drop", "value"),
-        Input("start_date", "value"),
-        Input("end_date", "value"),
-        Input("center-drop", "value"),
-        Input("outlier-radio", "value"),
-    ],
-)
-def update_total_card(selected_incident, start_date, end_date, center, remove_outliers):
-    """
-    Updates total incidents card value based on user choices
-    """
-    return total_incidents(
-        selected_incident, start_date, end_date, center, remove_outliers
-    )
+@app.callback(Output("card-24-incidents", "children"), [Input("time_range", "value")])
+def card_val_24_incident(time_range):
+    return card_value(time_range, incidents.pressure_ulcer_per_100, "wounds", "pressure_ulcer_per_100", left_number_right_spark)
 
+@app.callback(Output("card-25-incidents", "children"), [Input("time_range", "value")])
+def card_val_25_incident(time_range):
+    return card_value(time_range, incidents.incident_per_100MM, "burns", "per_100MM", left_number_right_spark, ["burns"])
 
-@app.callback(
-    Output("pmpm-card", "children"),
-    [
-        Input("incident-drop", "value"),
-        Input("start_date", "value"),
-        Input("end_date", "value"),
-        Input("center-drop", "value"),
-        Input("outlier-radio", "value"),
-    ],
-)
-def update_pmpm_card(selected_incident, start_date, end_date, center, remove_outliers):
-    """
-    Updates incidents per member per month card value based on user choices
-    """
-    return incidents_per100mm(
-        selected_incident, start_date, end_date, center, remove_outliers
-    )
+@app.callback(Output("card-26-incidents", "children"), [Input("time_range", "value")])
+def card_val_26_incident(time_range):
+    return card_value(time_range, incidents.ppts_w_incident, "burns", "unique_ppts", left_number_right_spark, ["burns"])
 
+@app.callback(Output("card-27-incidents", "children"), [Input("time_range", "value")])
+def card_val_27_incident(time_range):
+    return card_value(time_range, incidents.percent_by_repeaters, "burns", "percent_by_repeaters", left_number_right_spark, ["burns"])
 
-@app.callback(
-    Output("level-2-card-title", "children"), [Input("incident-drop", "value")]
-)
-def card3_name(selected_incident):
-    """
-    Updates last card in row title based on selected incident
-    """
-    return card_three_title[selected_incident]
+@app.callback(Output("card-28-incidents", "children"), [Input("time_range", "value")])
+def card_val_28_incident(time_range):
+    return card_value(time_range, incidents.percent_without_incident_in_period, "burns", "percent_without", left_number_right_spark, ["burns"])
 
+@app.callback(Output("card-29-incidents", "children"), [Input("time_range", "value")])
+def card_val_29_incident(time_range):
+    return card_value(time_range, incidents.third_degree_burn_rate, "burns", "third_degree_rate", left_number_right_spark)
 
-@app.callback(
-    Output("level-2-card", "children"),
-    [
-        Input("incident-drop", "value"),
-        Input("start_date", "value"),
-        Input("end_date", "value"),
-        Input("center-drop", "value"),
-    ],
-)
-def update_level2_card(incident, start_date, end_date, center):
-    """
-    Updates last card in row value based on user choices
-    """
-    return create_card_three(incident, start_date, end_date, center)
-
-
-@app.callback(
-    Output("repeat-ppts-card", "children"),
-    [
-        Input("incident-drop", "value"),
-        Input("start_date", "value"),
-        Input("end_date", "value"),
-        Input("center-drop", "value"),
-    ],
-)
-def update_repeat_card(selected_incident, start_date, end_date, center):
-    """
-    Updates ppts with multiple incidents card
-    based on user choices
-    """
-    repeats, percent_by_repeaters, outlier, outlier_num = repeat_ppts(
-        selected_incident, start_date, end_date, center
-    )
-    return f"{repeats} / {percent_by_repeaters}% / {outlier}({int(outlier_num)}+)"
-
-
-@app.callback(
-    Output("without-incident-card", "children"),
-    [
-        Input("incident-drop", "value"),
-        Input("start_date", "value"),
-        Input("end_date", "value"),
-        Input("center-drop", "value"),
-    ],
-)
-def update_no_incident_card(selected_incident, start_date, end_date, center):
-    """
-    Updates ppts without an incident card
-    based on user choices
-    """
-    return (
-        f"{percent_without_incident(selected_incident, start_date, end_date, center)}%"
-    )
-
+@app.callback(Output("card-30-incidents", "children"), [Input("time_range", "value")])
+def card_val_30_incident(time_range):
+    return card_value(time_range, incidents.rn_assessment_following_burn_percent, "burns", "rn_assessment_percent", left_number_right_spark)

@@ -1,7 +1,7 @@
 import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output, State
-from ..helpers_configs import color_palette
+from ..helper_functions import color_palette
 from ..app import app
 from ..components import Row, Col
 from ..login_utils import check_user
@@ -122,7 +122,8 @@ layout = html.Div(
                             },
                         ),
                     ],
-                    size=3, mobile_size=6,
+                    size=3,
+                    mobile_size=6,
                     style={
                         "height": "40vh",
                         "background-color": "white",
@@ -161,14 +162,14 @@ def update_output(n_clicks, n_submits, username, password):
     return is pressed or create button is clicked
 
     Args:
-        n_clicks: indicates if create button is clicked
+        n_clicks(int): indicates if create button is clicked
 
-        n_submits: indicates if enter is pressed while in
+        n_submits(int): indicates if enter is pressed while in
         password box
 
-        username: username string
+        username(str): username
 
-        password: password string
+        password(str): password
     
     Returns:
         Link to login or error message. Default return before click/return is

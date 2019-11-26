@@ -5,8 +5,11 @@ import argparse
 from src.pacedash.app import app
 from src.pacedash.index import app
 
-
+###used for testing and creation of dashboard - not production
 def argparser():
+    """
+    Adds arguments to the flask instance
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument("--port", metavar="PORT", default=8050, type=int)
     parser.add_argument("--host", metavar="HOST", default="localhost")
@@ -17,6 +20,9 @@ def argparser():
 
 
 def main():
+    """
+    Runs flask server instance
+    """
     args = argparser().parse_args()
     app.server.run(
         debug=args.debug,

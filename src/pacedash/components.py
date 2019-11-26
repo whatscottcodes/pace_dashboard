@@ -27,26 +27,12 @@ def Col(children=None, bp="md", size=None, mobile_size=None, **kwargs):
 @component
 def Card(children=None, **kwargs):
     """A convenience component that makes a Bootstrap card"""
-    return html.Div(
-        children=children, className="card text-center border-light", **kwargs
-    )
-
-
-@component
-def CardBody(children=None, **kwargs):
-    return html.Div(children=children, className="card-body", **kwargs)
-
-
-@component
-def CardDeck(children=None, wrapper=False, **kwargs):
-    """A convenience component that makes a Bootstrap CardDeck"""
-    if wrapper:
-        return html.Div(children=children, className="card-deck-wrapper", **kwargs)
-    return html.Div(children=children, className="card-deck", **kwargs)
+    return html.Div(children=children, className="card border rounded", **kwargs)
 
 
 @component
 def Header(children=None, **kwargs):
+    """A convenience component that makes an HTML header with the correct logo"""
     return html.Header(
         html.H1(
             children=[
@@ -64,6 +50,7 @@ def Fa(name):
 
 @component
 def Navbar(children=None, items=None, current_path=None, first_root_nav=True, **kwargs):
+    """A convenience component that makes a navbar with links"""
 
     items = items if items is not None else []
     nav_items = []

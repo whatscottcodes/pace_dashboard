@@ -1,13 +1,14 @@
+import datetime
+
 import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output, State
+from flask_login import login_user
+from werkzeug.security import check_password_hash
 
 from ..app import app, User
 from ..components import Row, Col
-from ..helpers_configs import log_path, color_palette
-from flask_login import login_user
-from werkzeug.security import check_password_hash
-import datetime
+from ..settings import color_palette, log_path
 
 layout = html.Div(
     [
@@ -208,6 +209,16 @@ layout = html.Div(
     [State("uname-box", "value"), State("pwd-box", "value")],
 )
 def success(n_clicks, n_submits, input1, input2):
+    """
+    If the login is successful updates url to the enrollment page
+
+    Args:
+        n_clicks(int): number of clicks for submit button, used to trigger callback
+        n_submits(int): number of times enter is clicked in password field -
+            used to trigger callback
+        input1(str): username field value
+        input2(str): password field value
+    """
     user = User.query.filter_by(username=input1).first()
     if user:
         if check_password_hash(user.password, input2):
@@ -217,7 +228,7 @@ def success(n_clicks, n_submits, input1, input2):
             log_file.close()
 
             login_user(user)
-            return "/census"
+            return "/enrollment"
         else:
             pass
     else:
@@ -230,6 +241,18 @@ def success(n_clicks, n_submits, input1, input2):
     [State("uname-box", "value"), State("pwd-box", "value")],
 )
 def update_output(n_clicks, n_submits, input1, input2):
+    """
+    If the login is successful  or the button/field has not been clicked does nothing,
+    if it unsuccessful returns Incorrect Username or Password
+
+    Args:
+        n_clicks(int): number of clicks for submit button, used to trigger callback
+        n_submits(int): number of times enter is clicked in password field -
+            used to trigger callback
+        input1(str): username field value
+        input2(str): password field value
+    """
+
     if n_submits == None:
         n_submits = 0
 
@@ -238,8 +261,8 @@ def update_output(n_clicks, n_submits, input1, input2):
         if user:
             if check_password_hash(user.password, input2):
                 return ""
-            else:
-                return "Incorrect Username or Password"
+
+            return "Incorrect Username or Password"
         else:
             return "Incorrect Username or Password"
     else:

@@ -6,8 +6,8 @@ body {
 
 
 /* Default link colours */
-a {color: #2DA749 !important}
-a:hover {color: #2DA749 !important}
+a {color: #2DA749}
+a:hover {color: #442359 !important}
 
 /* All links generated through Dash should have pointer for hover */
 a.link:hover {cursor: pointer}
@@ -44,9 +44,9 @@ position: relative;}
     line-height: inherit;
     display: inline-block;
     color: white;
-    font-size: 2vw;
+    font-size: 2.5vw;
 }
-
+.nav{padding-left:2.5vw;}
 .navbar {position:sticky; width:50vw; padding-top:1.5vmin; padding-left:3vmin;}
 #header .nav-item {display: flex; font-size: 1vmax; position: relative; text-align:center; justify-content: center; padding-right:1vw}
 #header .nav-link {padding:0;}

@@ -2,7 +2,7 @@
 import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output
-from ..helpers_configs import color_palette
+from ..settings import color_palette
 from ..app import app
 from ..components import Row, Col
 from ..login_utils import redirect_to_login
@@ -146,4 +146,7 @@ layout = html.Div(
 # Create callbacks
 @app.callback(Output("url_login_df", "pathname"), [Input("back-button", "n_clicks")])
 def logout_dashboard(n_clicks):
+    """
+    When the login button is clicked the login page layout is loaded.
+    """
     return redirect_to_login(n_clicks)

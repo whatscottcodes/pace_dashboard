@@ -1,6 +1,6 @@
+from flask_login import LoginManager, UserMixin
 from . import create_app, create_dash
 from .layouts import main_layout_header
-from flask_login import LoginManager, UserMixin
 from .users_mgt import db, User as base
 from .run_db_update import update_db, update_files
 

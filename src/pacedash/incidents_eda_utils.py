@@ -1,20 +1,21 @@
+import textwrap
+from titlecase import titlecase
 import pandas as pd
-import sqlite3
 import numpy as np
 import plotly.graph_objs as go
-from .helpers_configs import (
+from .helper_functions import (
     create_center_sql,
     create_join_sql,
     sql_return_df,
-    color_palette, 
     build_bar_layout,
-    db_filepath,
-    build_scatter_layout
+    build_scatter_layout,
+    helpers
 )
-from .census_utils import census_count_df, total_census
-import textwrap
-from titlecase import titlecase
+from .settings import color_palette
+from .enrollment_eda_utils import census_count_df
 
+
+#label and values for incident dropdowns
 incident_types_dropdown = [
     {"label": "Falls", "value": "falls"},
     {"label": "Med Errors", "value": "med_errors"},
@@ -23,6 +24,7 @@ incident_types_dropdown = [
     {"label": "Wounds", "value": "wounds"}
 ]
 
+#grouping options for med_errors
 med_error_dropdown_options = [
     "location",
     "severity",
@@ -32,6 +34,7 @@ med_error_dropdown_options = [
     "actions_taken",
 ]
 
+#grouping options for burns
 burns_dropdown_options = [
     "location",
     "burn_location",
@@ -40,6 +43,7 @@ burns_dropdown_options = [
     "actions_taken",
 ]
 
+#grouping options for falls
 falls_dropdown_options = [
     "location",
     "location_details",
@@ -54,6 +58,7 @@ falls_dropdown_options = [
     "actions_taken",
 ]
 
+#grouping options for infections
 infections_dropdown_options = [
     "infection_type",
     "medication_prescribed",
@@ -61,6 +66,7 @@ infections_dropdown_options = [
     "infection_treated_by",
 ]
 
+#grouping options for wounds
 wounds_dropdown_options = [
     "living_situation",
     "living_details",
@@ -70,6 +76,7 @@ wounds_dropdown_options = [
     "wound_type"
 ]
 
+#secondary dropdown values for each incident type
 drop_downs = {
     "med_errors": med_error_dropdown_options,
     "burns": burns_dropdown_options,
@@ -78,7 +85,7 @@ drop_downs = {
     "wounds": wounds_dropdown_options,
 }
 
-# falls columns
+# falls columns grouped by option
 environmental_factors = [
     "clutter",
     "disrepair",
@@ -166,7 +173,7 @@ actions_taken_falls = [
     "action_rn_assessment",
     "action_staff_education",
 ]
-
+#maps falls dropdown grouping to their columns
 falls_dict = {
     "location": ["location"],
     "location_details": ["location_details"],
@@ -181,7 +188,7 @@ falls_dict = {
     "actions_taken": actions_taken_falls,
 }
 
-# med_errors columns
+# med_errors columns grouped by option
 responsibility = [
     "responsibility_pharmacy",
     "responsibility_clinic",
@@ -262,7 +269,7 @@ actions_taken_med_errors = [
     "implemented_a_new_medication_delivery_system",
     "requested_a_corrective_action_plan_from_contracted_provider",
 ]
-
+#maps med_errors dropdown grouping to their columns
 med_errors_dict = {
     "location": ["location"],
     "location_details": ["location_details"],
@@ -273,7 +280,7 @@ med_errors_dict = {
     "actions_taken": actions_taken_med_errors,
 }
 
-# burns columns
+# burns columns grouped by options
 contributing_factors_burns = [
     "adaptive_equipment_not_used",
     "decrease_in_center_attendance",
@@ -340,6 +347,7 @@ actions_taken_burns = [
     "modified_environment_hospital"
 ]
 
+#maps burns dropdown grouping to their columns
 burns_dict = {
     "location": ["location"],
     "location_details": ["location_details"],
@@ -349,6 +357,7 @@ burns_dict = {
     "actions_taken": actions_taken_burns,
 }
 
+#maps infections dropdown grouping to their columns
 infections_dict = {
     "infection_type": ["infection_type"],
     "medication_prescribed": ["medication_prescribed"],
@@ -356,6 +365,7 @@ infections_dict = {
     "infection_treated_by": ["infection_treated_by"],
 }
 
+#maps wounds dropdown grouping to their columns
 wounds_dict = {
     "living_situation": ["living_situation"],
     "living_details": ["living_details"],
@@ -365,6 +375,8 @@ wounds_dict = {
     "wound_type": ["wound_type"]
 }
 
+#dictionary for getting dropdown option mapping
+#for each incident
 incident_dict = {
     "falls": falls_dict,
     "med_errors": med_errors_dict,
@@ -373,19 +385,27 @@ incident_dict = {
     "wounds": wounds_dict
 }
 
-card_three_title = {
-    "falls": "Major Harm/Death",
-    "med_errors": "Major Harm/Death",
-    "burns": "Third Degree +",
-    "infections": "Sepsis",
-    'wounds': "Unstageable"
-}
-
 def get_total_incidents(incident, start_date, end_date, freq, center):
+    """
+    Gets a list of total incidents in each frequency grouping ordered from
+    earliest to latest
+
+    Args:
+        incident(str): table to use as incident
+        start_date: start of the period in YYYY-MM-DD format
+        start_date: end of the period in YYYY-MM-DD format
+        freq(str): QS or MS, indicates if values should be aggregated 
+            monthly or quarterly
+        center(str): indicates what center to filter for
+    
+    Returns:
+        list: total incidents for each month or quarter
+    """
     params = [str(pd.to_datetime(start_date)), str(pd.to_datetime(end_date))]
     center_sql, params = create_center_sql(center, params)
     join_sql = create_join_sql(center, incident)
-    query_dict = {'Q':f"""
+    
+    query_dict = {'QS':f"""
     SELECT COUNT({incident}.member_id) as total,
     (cast(strftime('%m', date_time_occurred) as integer) + 2) / 3 as quarter,
     strftime('%Y', date_time_occurred) as year
@@ -395,7 +415,7 @@ def get_total_incidents(incident, start_date, end_date, freq, center):
     {center_sql}
     GROUP BY year, quarter;
     """,
-                  'M':f"""
+                  'MS':f"""
     SELECT COUNT({incident}.member_id) as total,
     strftime('%m', date_time_occurred) as month,
     strftime('%Y', date_time_occurred) as year
@@ -406,10 +426,8 @@ def get_total_incidents(incident, start_date, end_date, freq, center):
     GROUP BY year, month;
     """}
     
-    conn = sqlite3.connect('V:\\Databases\\reporting.db')
-    c = conn.cursor()
-    totals = [val[0] for val in c.execute(query_dict[freq], params).fetchall()]
-    conn.close()
+
+    totals = [val[0] for val in helpers.fetchall_query(query_dict[freq], params)]
     
     return totals
 
@@ -418,9 +436,9 @@ def incidents_df(start_date, end_date, incident, center, freq):
     Creates pandas dataframe from SQL table of selected incident
 
     Args:
-        start_date: First date to include in resulting dateframe
+        start_date: First date to include in resulting dataframe
 
-        end_date: Last date to include in resulting dateframe
+        end_date: Last date to include in resulting dataframe
 
         incident: incident table to run query on
 
@@ -431,7 +449,7 @@ def incidents_df(start_date, end_date, incident, center, freq):
 
     Returns:
         df: pandas dataframe with all columns of SQL table
-            of selected incient with a date column for 
+            of selected incident with a date column for
             grouping the df by month or quarter
     """
     params = [pd.to_datetime(start_date).date(), pd.to_datetime(end_date).date()]
@@ -439,26 +457,72 @@ def incidents_df(start_date, end_date, incident, center, freq):
  
     query = f"""
     SELECT i.* FROM {incident} i
-    JOIN enrollment e ON i.member_id=e.member_id
+    JOIN centers on i.member_id=centers.member_id
     WHERE i.date_time_occurred BETWEEN ? AND ?
     {center_sql};
     """
     df = sql_return_df(query, params, ["date_time_occurred"])
-    df["date"] = df["date_time_occurred"].dt.to_period(freq)
+    df["date"] = df["date_time_occurred"].dt.to_period(freq[0])
 
     return df
+
+def repeat_ppts(incident, start_date, end_date, center):
+    """
+    Calculates number of participants with multiple incidents,
+        the percent of incidents attributed to these participants,
+        the number of participants with a number of incidents
+        above the outlier limit,
+        and the outlier limit(mean+1SD)
+
+    Args:
+        incident: incident type user selected
+
+        start_date: First date to include in resulting dataframe
+
+        end_date: Last date to include in resulting dataframe
+
+        center: Name of PACE center
+        
+        get_ppts: Default False, 
+            if True only return a list of ppts with multiple incidents
+        
+        total_num_from_outlier_ppts: Default False,
+            if True only return the total number of incidents
+            attributed to participants with a number of
+            incidents above the outlier limit
+
+    Returns:
+        ppts_w_multiple: list of ppts with multiple incidents
+    """
+    params = [pd.to_datetime(start_date).date(), pd.to_datetime(end_date).date()]
+
+    center_sql, params = create_center_sql(center, params)
+
+    join_sql = create_join_sql(center, incident)
+
+    repeat_incidents_query = f"""
+        SELECT {incident}.member_id, COUNT(*) FROM {incident}
+        {join_sql}
+        WHERE date_time_occurred BETWEEN ? AND ?
+        {center_sql}
+        GROUP BY {incident}.member_id
+        HAVING COUNT(*) > 1;
+        """
+    ppts_w_multiple = helpers.fetchall_query(repeat_incidents_query, params)
+    
+    return ppts_w_multiple   
 
 def df_no_outliers(df, incident, start_date, end_date, center):
     """
     Removes any participant with a number of incidents in the
-    datarange greater than the determined outlier number
+    daterange greater than the determined outlier number
 
     Args:
         df: incident dataframe to remove outliers from
 
-        start_date: First date to include in resulting dateframe
+        start_date: First date to include in resulting dataframe
 
-        end_date: Last date to include in resulting dateframe
+        end_date: Last date to include in resulting dataframe
 
         incident: incident table to run query on
 
@@ -466,10 +530,10 @@ def df_no_outliers(df, incident, start_date, end_date, center):
 
     Returns:
         df: pandas dataframe with any participant with a number of
-        incidents in the datarange greater than the 
+        incidents in the daterange greater than the
         determined outlier number removed
     """
-    ppts_w_multiple = repeat_ppts(incident, start_date, end_date, center, get_ppts=True)
+    ppts_w_multiple = repeat_ppts(incident, start_date, end_date, center)
 
     incident_mean = np.mean([val[1] for val in ppts_w_multiple])
     incident_sd = np.std([val[1] for val in ppts_w_multiple])
@@ -491,9 +555,9 @@ def update_graph(
     Args:
         incident: incident type user selected
 
-        start_date: First date to include in resulting dateframe
+        start_date: First date to include in resulting dataframe
 
-        end_date: Last date to include in resulting dateframe
+        end_date: Last date to include in resulting dataframe
 
         freq: M or Q, determines if results should be grouped by
             month or quarter
@@ -511,7 +575,7 @@ def update_graph(
             included
 
     Returns:
-         dict: contianging plotly figure data and layout information
+         dict: containing plotly figure data and layout information
     """
     df = incidents_df(start_date, end_date, incident, center, freq)
 
@@ -575,9 +639,9 @@ def update_trending_graph(incident, start_date, end_date, freq, measure, center,
     Args:
         incident: incident type user selected
 
-        start_date: First date to include in resulting dateframe
+        start_date: First date to include in resulting dataframe
 
-        end_date: Last date to include in resulting dateframe
+        end_date: Last date to include in resulting dataframe
 
         freq: M or Q, determines if results should be grouped by
             month or quarter
@@ -592,7 +656,7 @@ def update_trending_graph(incident, start_date, end_date, freq, measure, center,
             included
 
     Returns:
-         dict: contianging plotly figure data and layout information
+         dict: containing plotly figure data and layout information
     """
     df = incidents_df(start_date, end_date, incident, center, freq)
     
@@ -603,7 +667,7 @@ def update_trending_graph(incident, start_date, end_date, freq, measure, center,
     plot_df.rename(columns={"date_time_occurred": "count"}, inplace=True)
 
     if measure == "pmpm":
-        if freq == 'Q':
+        if freq == 'QS':
             pmpm_df = census_count_df(center, start_date, end_date, freq, quarter_pmpm=True)
         else:
             pmpm_df = census_count_df(center, start_date, end_date, freq)
@@ -641,247 +705,10 @@ def update_trending_graph(incident, start_date, end_date, freq, measure, center,
     fig_layout = build_scatter_layout(
         f"{plot_title}", plot_df["count"].min(),
         plot_df["count"].max(),
-        small_margins=True, x_ticks=x_ticks
+        x_ticks=x_ticks
         )
 
     return dict(data=fig_data, layout=fig_layout)
-
-
-def total_incidents(incident, start_date, end_date, center, remove_outliers=False):
-    """
-    Calculates total number of incidents in date range
-
-    Args:
-        incident: incident type user selected
-
-        start_date: First date to include in resulting dateframe
-
-        end_date: Last date to include in resulting dateframe
-
-        center: Name of PACE center
-
-        remove_outliers: if true participants with more
-            incidents than the outlier number are not
-            included
-
-    Returns:
-         int: total number of incidents in date range
-    """
-    params = [pd.to_datetime(start_date).date(), pd.to_datetime(end_date).date()]
-    center_sql, params = create_center_sql(center, params)
-
-    join_sql = create_join_sql(center, incident)
-
-    query = f"""
-    SELECT COUNT(*) FROM {incident}
-    {join_sql}
-    WHERE date_time_occurred BETWEEN ? AND ?
-    {center_sql}
-    """
-    conn = sqlite3.connect(db_filepath)
-    c = conn.cursor()
-
-    results = c.execute(query, params).fetchone()[0]
-
-    conn.close()
-
-    if remove_outliers:
-        num_outliers = repeat_ppts(incident, start_date, end_date, center, get_ppts=False, total_num_from_outlier_ppts=True)
-        results -= num_outliers
-    return results
-
-
-def incidents_per100mm(incident, start_date, end_date, center, remove_outliers=False):
-    """
-    Calculates incidents per 100 member months in date range
-
-    Args:
-        incident: incident type user selected
-
-        start_date: First date to include in resulting dateframe
-
-        end_date: Last date to include in resulting dateframe
-
-        center: Name of PACE center
-
-        remove_outliers: if true participants with more
-            incidents than the outlier number are not
-            included
-
-    Returns:
-         int: incidents per 100 member months in date range
-    """
-    params = [pd.to_datetime(start_date).date(), pd.to_datetime(end_date).date()]
-    
-    center_sql, params = create_center_sql(center, params)
-
-    join_sql = create_join_sql(center, incident)
-
-    incident_query = f"""
-    SELECT COUNT(*) FROM {incident}
-    {join_sql}
-    WHERE date_time_occurred BETWEEN ? AND ?
-    {center_sql};
-    """
-
-    conn = sqlite3.connect(db_filepath)
-    c = conn.cursor()
-    result = c.execute(incident_query, params).fetchone()[0]
-    conn.close()
-
-    if remove_outliers:
-        num_outliers = repeat_ppts(incident, start_date, end_date, center, get_ppts=False, total_num_from_outlier_ppts=True)
-        result -= num_outliers
-    
-    pmpm_df = census_count_df(center, params[0], params[1], 'M')
-
-    incidents_per_100 = (
-        result
-        / pmpm_df['Census'].sum()
-    ) * 100
-
-    
-    return round(incidents_per_100, 2)
-
-def repeat_ppts(incident, start_date, end_date, center, get_ppts=False, total_num_from_outlier_ppts=False):
-    """
-    Calculates number of participants with multiple incidents, 
-        the percent of incidents attributed to these participants, 
-        the number of participants with a number of incidents
-        above the outlier limit,
-        and the outlier limit(mean+1SD)
-
-    Args:
-        incident: incident type user selected
-
-        start_date: First date to include in resulting dateframe
-
-        end_date: Last date to include in resulting dateframe
-
-        center: Name of PACE center
-        
-        get_ppts: Default False, 
-            if True only return a list of ppts with multiple incidents
-        
-        total_num_from_outlier_ppts: Default False,
-            if True only return the total number of incidents
-            attributed to participants with a number of
-            incidents above the outlier limit
-
-    Returns:
-        if get_ppts:
-            ppts_w_multiple: list of ppts with multiple incidents
-        if total_num_from_outlier_ppts:
-            int: total incidents attributed to outlier ppts
-    
-    num_of_repeat_ppts: number of ppts with more than 1 incidents
-
-    round(percent_by_repeaters*100, 2): percent of incidents
-        attributed to the repeat ppts
-
-    num_of_outlier_ppts: number of ppts with a number of incidents
-        above the outlier limit
-
-    outlier_num: outlier limite, calculated as the mean number of
-        incidents plus 1 standard deviation
-    """
-    params = [pd.to_datetime(start_date).date(), pd.to_datetime(end_date).date()]
-
-    center_sql, params = create_center_sql(center, params)
-
-    join_sql = create_join_sql(center, incident)
-
-    repeat_incidents_query = f"""
-        SELECT {incident}.member_id, COUNT(*) FROM {incident}
-        {join_sql}
-        WHERE date_time_occurred BETWEEN ? AND ?
-        {center_sql}
-        GROUP BY {incident}.member_id
-        HAVING COUNT(*) > 1;
-        """
-
-    total_incidents_query = f"""
-        SELECT {incident}.member_id, COUNT(*) FROM {incident}
-        {join_sql}
-        WHERE date_time_occurred BETWEEN ? AND ?
-        {center_sql};
-        """
-
-    conn = sqlite3.connect(db_filepath)
-    c = conn.cursor()
-
-    num_incidents = c.execute(total_incidents_query, params).fetchone()[1]
-    ppts_w_multiple = c.execute(repeat_incidents_query, params).fetchall()
-    
-    conn.close()
-
-    if get_ppts:
-        return ppts_w_multiple
-    
-    num_of_repeat_ppts = len(ppts_w_multiple)
-
-    incidents_by_repeaters = sum([val[1] for val in ppts_w_multiple])
-    
-    incident_mean = np.mean([val[1] for val in ppts_w_multiple])
-    incident_sd = np.std([val[1] for val in ppts_w_multiple])
-    
-    outlier_num = incident_mean + incident_sd
-
-    if (outlier_num is np.nan) or (outlier_num != outlier_num):
-        outlier_num = 0
-
-    if total_num_from_outlier_ppts:
-        return sum([val[1] for val in ppts_w_multiple if val[1] >= int(outlier_num)])
-
-    num_of_outlier_ppts = len([val[1] for val in ppts_w_multiple if val[1] >= int(outlier_num)])
-        
-    percent_by_repeaters = incidents_by_repeaters/num_incidents
-
-    return num_of_repeat_ppts, round(percent_by_repeaters*100, 2), num_of_outlier_ppts, outlier_num
-
-def percent_without_incident(incident, start_date, end_date, center):
-    """
-    Calculates the percent of participants who did not 
-        have an incident in the daterange
-
-    Args:
-        incident: incident type user selected
-
-        start_date: First date to include in resulting dateframe
-
-        end_date: Last date to include in resulting dateframe
-
-        center: Name of PACE center
-
-    Returns:
-         percent_without: percent of participants who did not have
-            an incident in the daterange
-    """
-    params = [pd.to_datetime(start_date).date(), pd.to_datetime(end_date).date()]
-
-    center_sql, params = create_center_sql(center, params)
-    join_sql = create_join_sql(center, incident)
-
-    with_incident_query = f"""
-    SELECT COUNT(DISTINCT({incident}.member_id)) FROM {incident}
-    {join_sql}
-    WHERE date_time_occurred BETWEEN ? AND ?
-    {center_sql};
-    """
-
-    conn = sqlite3.connect(db_filepath)
-    c = conn.cursor()
-
-    ppts_with_incident = c.execute(with_incident_query, params).fetchone()[0]
-    
-    conn.close()
-
-    total_ppts = total_census(center, start_date, end_date)
-
-    ppts_without = total_ppts - ppts_with_incident
-    percent_without = ppts_without / total_ppts
-    
-    return round(percent_without*100, 2)    
 
 def incident_details_options(start_date, end_date, selected_incident, selected_cols, amount, center):
     """
@@ -890,9 +717,9 @@ def incident_details_options(start_date, end_date, selected_incident, selected_c
 
     Args:
 
-        start_date: First date to include in resulting dateframe
+        start_date: First date to include in resulting dataframe
 
-        end_date: Last date to include in resulting dateframe
+        end_date: Last date to include in resulting dataframe
 
         selected_incident: incident type user selected
 
@@ -921,13 +748,8 @@ def incident_details_options(start_date, end_date, selected_incident, selected_c
         {center_sql};
         """
 
-        conn = sqlite3.connect(db_filepath)
-        c = conn.cursor()
-
-        incident_options = [val[0] for val in c.execute(query, params).fetchall()]
+        incident_options = [val[0] for val in helpers.fetchall_query(query, params)]
         
-        conn.close()
-
     if len(incident_options) > int(amount):
         return [
             {"label": titlecase(i.replace("_", " ")), "value": i}
@@ -936,62 +758,3 @@ def incident_details_options(start_date, end_date, selected_incident, selected_c
         ]
         
     return [{}]
-
-def create_card_three(incident, start_date, end_date, center):
-
-    params = [pd.to_datetime(start_date).date(), pd.to_datetime(end_date).date()]
-
-    center_sql, params = create_center_sql(center, params)
-    join_sql = create_join_sql(center, incident)
-    if (incident == 'falls') or (incident == 'med_errors'):
-        q = f"""
-            SELECT COUNT(*) FROM {incident}
-            {join_sql}
-            WHERE date_time_occurred BETWEEN ? AND ?
-            AND (severity = 'Major Harm' OR 
-            severity = 'Death')
-            {center_sql};
-            """      
-    if incident == 'burns':    
-        q = f"""
-            SELECT COUNT(*) FROM burns
-            {join_sql}
-            WHERE date_time_occurred BETWEEN ? AND ?
-            AND (burn_degree = 'Third' OR
-            burn_degree = 'Fourth')
-            {center_sql};
-            """
-
-    if incident == 'infections':
-        join_sql = create_join_sql(center, 'inpatient')
-        q = f"""
-            SELECT COUNT(*) from inpatient
-            JOIN infections ON inpatient.member_id = infections.member_id
-            {join_sql}
-            WHERE infections.date_time_occurred BETWEEN ? AND ?
-            AND (instr(inpatient.admit_reason, 'Sepsis') > 0
-            OR instr(inpatient.admit_reason, 'sepsis') > 0)
-            AND (
-                (julianday(inpatient.admission_date) - julianday(infections.date_time_occurred) <= 10)
-                AND (julianday(inpatient.admission_date) - julianday(infections.date_time_occurred) >= -10)
-            )
-            {center_sql};
-            """
-
-    if incident == 'wounds':
-        q = f"""
-            SELECT COUNT(*) FROM wounds
-            {join_sql}
-            WHERE date_time_occurred BETWEEN ? AND ?
-            AND pressure_ulcer = 'Unstageable'
-            {center_sql};
-            """
-
-    conn = sqlite3.connect(db_filepath)
-    c = conn.cursor()
-
-    num_of_incidents = c.execute(q, params).fetchone()[0]
-        
-    conn.close()
-
-    return num_of_incidents

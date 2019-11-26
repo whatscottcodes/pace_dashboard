@@ -4,13 +4,9 @@ from dash.dependencies import Input, Output
 
 from ..app import app
 from ..components import Col, Row
-from ..helper_functions import (
-    enrollment,
-    demographics,
-    quality,
-    card_value
-)
+from ..helper_functions import enrollment, card_value
 from ..settings import color_palette
+
 from ..layouts import (
     card_col,
     indicator_header,
@@ -18,33 +14,32 @@ from ..layouts import (
     top_number_bottom_spark,
 )
 
-
 layout = html.Div(
     [
-        Row(indicator_header("Demographics"), className="header-row"),
+        Row(indicator_header("Enrollment"), className="header-row"),
         Row(
             [
                 card_col(
-                    card_title="Avg. Age",
-                    card_val_id="card-1-demographics",
+                    card_title="Census",
+                    card_val_id="card-1-enrollment",
                     color=color_palette[1],
                     size=3,
                 ),
                 card_col(
-                    card_title="Avg. Years Enrolled",
-                    card_val_id="card-2-demographics",
+                    card_title="Enrolled",
+                    card_val_id="card-2-enrollment",
                     color=color_palette[1],
                     size=3,
                 ),
                 card_col(
-                    card_title="Living in the Community(%)",
-                    card_val_id="card-3-demographics",
+                    card_title="Disenrolled",
+                    card_val_id="card-3-enrollment",
                     color=color_palette[1],
                     size=3,
                 ),
                 card_col(
-                    card_title="Below 65 Years Old(%)",
-                    card_val_id="card-4-demographics",
+                    card_title="Net Enrollment",
+                    card_val_id="card-4-enrollment",
                     color=color_palette[1],
                     size=3,
                 ),
@@ -54,38 +49,38 @@ layout = html.Div(
         Row(
             [
                 card_col(
-                    card_title="Non-English(%)",
-                    card_val_id="card-5-demographics",
+                    card_title="Voluntary Disenrollments(%)",
+                    card_val_id="card-5-enrollment",
                     color=color_palette[3],
                     font_size="1.25vmax",
                 ),
                 card_col(
-                    card_title="Non-White(%)",
-                    card_val_id="card-6-demographics",
+                    card_title="Inquiries",
+                    card_val_id="card-6-enrollment",
                     color=color_palette[3],
                     font_size="1.25vmax",
                 ),
                 card_col(
-                    card_title="Female(%)",
-                    card_val_id="card-7-demographics",
+                    card_title="Avg. Days to Enrollment",
+                    card_val_id="card-7-enrollment",
                     color=color_palette[3],
                     font_size="1.25vmax",
                 ),
                 card_col(
-                    card_title="Dual(%)",
-                    card_val_id="card-8-demographics",
+                    card_title="180 Day Conversion Rate",
+                    card_val_id="card-8-enrollment",
                     color=color_palette[3],
                     font_size="1.25vmax",
                 ),
                 card_col(
-                    card_title="Medicaid Only(%)",
-                    card_val_id="card-9-demographics",
+                    card_title="Growth",
+                    card_val_id="card-9-enrollment",
                     color=color_palette[3],
                     font_size="1.25vmax",
                 ),
                 card_col(
-                    card_title="Private Pay(%)",
-                    card_val_id="card-10-demographics",
+                    card_title="Churn",
+                    card_val_id="card-10-enrollment",
                     color=color_palette[3],
                     font_size="1.25vmax",
                 ),
@@ -95,38 +90,38 @@ layout = html.Div(
         Row(
             [
                 card_col(
-                    card_title="BH Diagnosis(%)",
-                    card_val_id="card-11-demographics",
+                    card_title="Website Visits",
+                    card_val_id="card-11-enrollment",
                     color=color_palette[1],
                     font_size="2vmax",
                 ),
                 card_col(
-                    card_title="6+ Chronic Conditions(%)",
-                    card_val_id="card-12-demographics",
+                    card_title="Site Donate Rate",
+                    card_val_id="card-12-enrollment",
                     color=color_palette[1],
                     font_size="2vmax",
                 ),
                 card_col(
-                    card_title="Pneumo. Rate",
-                    card_val_id="card-13-demographics",
+                    card_title="Site Contact Rate",
+                    card_val_id="card-13-enrollment",
                     color=color_palette[1],
                     font_size="2vmax",
                 ),
                 card_col(
-                    card_title="Influenza Rate",
-                    card_val_id="card-14-demographics",
+                    card_title="Email Subscription Rate",
+                    card_val_id="card-14-enrollment",
                     color=color_palette[1],
                     font_size="2vmax",
                 ),
                 card_col(
-                    card_title="Avg. Days Until NF Admit",
-                    card_val_id="card-15-demographics",
+                    card_title="Email Engagement Rate",
+                    card_val_id="card-15-enrollment",
                     color=color_palette[1],
                     font_size="2vmax",
                 ),
                 card_col(
-                    card_title="No Hosp. Last Year(%)",
-                    card_val_id="card-16-demographics",
+                    card_title="Facebook Engagement Rate",
+                    card_val_id="card-16-enrollment",
                     color=color_palette[1],
                     font_size="2vmax",
                 ),
@@ -235,188 +230,141 @@ layout = html.Div(
 )
 
 
-@app.callback(Output("card-1-demographics", "children"), [Input("time_range", "value")])
-def card_val_1_demographics(time_range):
+@app.callback(Output("card-1-enrollment", "children"), [Input("time_range", "value")])
+def card_val_1_enrollment(time_range):
     return card_value(
         time_range,
-        demographics.avg_age,
-        "demographics",
-        "avg_age",
-        top_number_bottom_spark,
-    )
-
-
-@app.callback(Output("card-2-demographics", "children"), [Input("time_range", "value")])
-def card_val_2_demographics(time_range):
-    return card_value(
-        time_range,
-        enrollment.avg_years_enrolled,
+        enrollment.census_on_end_date,
         "enrollment",
-        "avg_years_enrolled",
+        "census",
         top_number_bottom_spark,
     )
 
 
-@app.callback(Output("card-3-demographics", "children"), [Input("time_range", "value")])
-def card_val_3_demographics(time_range):
+@app.callback(Output("card-2-enrollment", "children"), [Input("time_range", "value")])
+def card_val_2_enrollment(time_range):
     return card_value(
         time_range,
-        demographics.living_in_community_percent,
-        "demographics",
-        "percent_living_in_community",
+        enrollment.enrolled,
+        "enrollment",
+        "enrolled",
         top_number_bottom_spark,
     )
 
 
-@app.callback(Output("card-4-demographics", "children"), [Input("time_range", "value")])
-def card_val_4_demographics(time_range):
+@app.callback(Output("card-3-enrollment", "children"), [Input("time_range", "value")])
+def card_val_3_enrollment(time_range):
     return card_value(
         time_range,
-        demographics.percent_age_below_65,
-        "demographics",
-        "percent_below_65",
+        enrollment.disenrolled,
+        "enrollment",
+        "disenrolled",
         top_number_bottom_spark,
     )
 
 
-@app.callback(Output("card-5-demographics", "children"), [Input("time_range", "value")])
-def card_val_5_demographics(time_range):
+@app.callback(Output("card-4-enrollment", "children"), [Input("time_range", "value")])
+def card_val_4_enrollment(time_range):
     return card_value(
         time_range,
-        demographics.percent_primary_non_english,
-        "demographics",
-        "percent_primary_non_english",
+        enrollment.net_enrollment,
+        "enrollment",
+        "net_enrollment",
+        top_number_bottom_spark,
+    )
+
+
+@app.callback(Output("card-5-enrollment", "children"), [Input("time_range", "value")])
+def card_val_5_enrollment(time_range):
+    return card_value(
+        time_range,
+        enrollment.voluntary_disenrolled_percent,
+        "enrollment",
+        "voluntary_disenrolled",
         left_number_right_spark,
     )
 
 
-@app.callback(Output("card-6-demographics", "children"), [Input("time_range", "value")])
-def card_val_6_demographics(time_range):
+@app.callback(Output("card-6-enrollment", "children"), [Input("time_range", "value")])
+def card_val_6_enrollment(time_range):
     return card_value(
         time_range,
-        demographics.percent_non_white,
-        "demographics",
-        "percent_non_white",
+        enrollment.inquiries,
+        "enrollment",
+        "inquiries",
         left_number_right_spark,
     )
 
 
-@app.callback(Output("card-7-demographics", "children"), [Input("time_range", "value")])
-def card_val_7_demographics(time_range):
+@app.callback(Output("card-7-enrollment", "children"), [Input("time_range", "value")])
+def card_val_7_enrollment(time_range):
     return card_value(
         time_range,
-        demographics.percent_female,
-        "demographics",
-        "percent_female",
+        enrollment.avg_days_to_enrollment,
+        "enrollment",
+        "avg_days_to_enrollment",
         left_number_right_spark,
     )
 
 
-@app.callback(Output("card-8-demographics", "children"), [Input("time_range", "value")])
-def card_val_8_demographics(time_range):
+@app.callback(Output("card-8-enrollment", "children"), [Input("time_range", "value")])
+def card_val_8_enrollment(time_range):
     return card_value(
         time_range,
-        demographics.percent_dual,
-        "demographics",
-        "percent_dual_enrolled",
+        enrollment.conversion_rate_180_days,
+        "enrollment",
+        "conversion_rate_180_days",
         left_number_right_spark,
     )
 
 
-@app.callback(Output("card-9-demographics", "children"), [Input("time_range", "value")])
-def card_val_9_demographics(time_range):
+@app.callback(Output("card-9-enrollment", "children"), [Input("time_range", "value")])
+def card_val_9_enrollment(time_range):
     return card_value(
         time_range,
-        demographics.percent_medicaid_only,
-        "demographics",
-        "percent_medicaid_only",
+        enrollment.growth_rate,
+        "enrollment",
+        "growth_rate",
         left_number_right_spark,
     )
 
 
-@app.callback(
-    Output("card-10-demographics", "children"), [Input("time_range", "value")]
-)
-def card_val_10_demographics(time_range):
+@app.callback(Output("card-10-enrollment", "children"), [Input("time_range", "value")])
+def card_val_10_enrollment(time_range):
     return card_value(
         time_range,
-        demographics.percent_private_pay,
-        "demographics",
-        "percent_private_pay",
+        enrollment.churn_rate,
+        "enrollment",
+        "churn_rate",
         left_number_right_spark,
     )
 
 
-@app.callback(
-    Output("card-11-demographics", "children"), [Input("time_range", "value")]
-)
-def card_val_11_demographics(time_range):
-    return card_value(
-        time_range,
-        demographics.behavorial_dx_percent,
-        "demographics",
-        "bh_dx_percent",
-        top_number_bottom_spark,
-    )
+@app.callback(Output("card-11-enrollment", "children"), [Input("time_range", "value")])
+def card_val_11_enrollment(time_range):
+    return ""
 
 
-@app.callback(
-    Output("card-12-demographics", "children"), [Input("time_range", "value")]
-)
-def card_val_12_demographics(time_range):
-    return card_value(
-        time_range,
-        demographics.over_six_chronic_conditions_percent,
-        "demographics",
-        "six_chronic_conditions",
-        top_number_bottom_spark,
-    )
+@app.callback(Output("card-12-enrollment", "children"), [Input("time_range", "value")])
+def card_val_12_enrollment(time_range):
+    return ""
 
 
-@app.callback(
-    Output("card-13-demographics", "children"), [Input("time_range", "value")]
-)
-def card_val_13_demographics(time_range):
-    return card_value(
-        time_range,
-        quality.pneumo_rate,
-        "quality",
-        "pneumo_rate",
-        top_number_bottom_spark,
-    )
+@app.callback(Output("card-13-enrollment", "children"), [Input("time_range", "value")])
+def card_val_13_enrollment(time_range):
+    return ""
 
 
-@app.callback(
-    Output("card-14-demographics", "children"), [Input("time_range", "value")]
-)
-def card_val_14_demographics(time_range):
-    return card_value(
-        time_range, quality.influ_rate, "quality", "influ_rate", top_number_bottom_spark
-    )
+@app.callback(Output("card-14-enrollment", "children"), [Input("time_range", "value")])
+def card_val_14_enrollment(time_range):
+    return ""
 
 
-@app.callback(
-    Output("card-15-demographics", "children"), [Input("time_range", "value")]
-)
-def card_val_15_demographics(time_range):
-    return card_value(
-        time_range,
-        quality.avg_days_until_nf_admission,
-        "quality",
-        "avg_days_until_nf_admission",
-        top_number_bottom_spark,
-    )
+@app.callback(Output("card-15-enrollment", "children"), [Input("time_range", "value")])
+def card_val_15_enrollment(time_range):
+    return ""
 
 
-@app.callback(
-    Output("card-16-demographics", "children"), [Input("time_range", "value")]
-)
-def card_val_16_demographics(time_range):
-    return card_value(
-        time_range,
-        quality.no_hosp_admission_last_year,
-        "quality",
-        "no_hosp_admission_last_year",
-        top_number_bottom_spark,
-    )
-
+@app.callback(Output("card-16-enrollment", "children"), [Input("time_range", "value")])
+def card_val_16_enrollment(time_range):
+    return ""

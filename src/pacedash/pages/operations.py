@@ -6,11 +6,13 @@ from ..app import app
 from ..components import Col, Row
 from ..helper_functions import (
     enrollment,
+    center_enrollment,
     demographics,
-    quality,
-    card_value
+    agg,
+    card_value,
 )
 from ..settings import color_palette
+
 from ..layouts import (
     card_col,
     indicator_header,
@@ -18,33 +20,32 @@ from ..layouts import (
     top_number_bottom_spark,
 )
 
-
 layout = html.Div(
     [
-        Row(indicator_header("Demographics"), className="header-row"),
+        Row(indicator_header("Operations"), className="header-row"),
         Row(
             [
                 card_col(
-                    card_title="Avg. Age",
-                    card_val_id="card-1-demographics",
+                    card_title="Census",
+                    card_val_id="card-1-ops",
                     color=color_palette[1],
                     size=3,
                 ),
                 card_col(
-                    card_title="Avg. Years Enrolled",
-                    card_val_id="card-2-demographics",
+                    card_title="Providence",
+                    card_val_id="card-2-ops",
                     color=color_palette[1],
                     size=3,
                 ),
                 card_col(
-                    card_title="Living in the Community(%)",
-                    card_val_id="card-3-demographics",
+                    card_title="Woonsocket",
+                    card_val_id="card-3-ops",
                     color=color_palette[1],
                     size=3,
                 ),
                 card_col(
-                    card_title="Below 65 Years Old(%)",
-                    card_val_id="card-4-demographics",
+                    card_title="Westerly",
+                    card_val_id="card-4-ops",
                     color=color_palette[1],
                     size=3,
                 ),
@@ -54,38 +55,38 @@ layout = html.Div(
         Row(
             [
                 card_col(
-                    card_title="Non-English(%)",
-                    card_val_id="card-5-demographics",
+                    card_title="Avg. Attendance PVD",
+                    card_val_id="card-5-ops",
                     color=color_palette[3],
                     font_size="1.25vmax",
                 ),
                 card_col(
-                    card_title="Non-White(%)",
-                    card_val_id="card-6-demographics",
+                    card_title="Avg. Attendance WOO",
+                    card_val_id="card-6-ops",
                     color=color_palette[3],
                     font_size="1.25vmax",
                 ),
                 card_col(
-                    card_title="Female(%)",
-                    card_val_id="card-7-demographics",
+                    card_title="Avg. Attendance WES",
+                    card_val_id="card-7-ops",
                     color=color_palette[3],
                     font_size="1.25vmax",
                 ),
                 card_col(
-                    card_title="Dual(%)",
-                    card_val_id="card-8-demographics",
+                    card_title="Cancellation Rate PVD",
+                    card_val_id="card-8-ops",
                     color=color_palette[3],
                     font_size="1.25vmax",
                 ),
                 card_col(
-                    card_title="Medicaid Only(%)",
-                    card_val_id="card-9-demographics",
+                    card_title="Cancellation Rate WOO",
+                    card_val_id="card-9-ops",
                     color=color_palette[3],
                     font_size="1.25vmax",
                 ),
                 card_col(
-                    card_title="Private Pay(%)",
-                    card_val_id="card-10-demographics",
+                    card_title="Cancellation Rate WES",
+                    card_val_id="card-10-ops",
                     color=color_palette[3],
                     font_size="1.25vmax",
                 ),
@@ -95,38 +96,38 @@ layout = html.Div(
         Row(
             [
                 card_col(
-                    card_title="BH Diagnosis(%)",
-                    card_val_id="card-11-demographics",
+                    card_title="Attending Day Center(%)",
+                    card_val_id="card-11-ops",
                     color=color_palette[1],
                     font_size="2vmax",
                 ),
                 card_col(
-                    card_title="6+ Chronic Conditions(%)",
-                    card_val_id="card-12-demographics",
+                    card_title="Rides by PACE(%)",
+                    card_val_id="card-12-ops",
                     color=color_palette[1],
                     font_size="2vmax",
                 ),
                 card_col(
-                    card_title="Pneumo. Rate",
-                    card_val_id="card-13-demographics",
+                    card_title="Staffing Ratio",
+                    card_val_id="card-13-ops",
                     color=color_palette[1],
                     font_size="2vmax",
                 ),
                 card_col(
-                    card_title="Influenza Rate",
-                    card_val_id="card-14-demographics",
+                    card_title="Staff Hours per DC Ppt",
+                    card_val_id="card-14-ops",
                     color=color_palette[1],
                     font_size="2vmax",
                 ),
                 card_col(
-                    card_title="Avg. Days Until NF Admit",
-                    card_val_id="card-15-demographics",
+                    card_title="Level 2 Events in DC",
+                    card_val_id="card-15-ops",
                     color=color_palette[1],
                     font_size="2vmax",
                 ),
                 card_col(
-                    card_title="No Hosp. Last Year(%)",
-                    card_val_id="card-16-demographics",
+                    card_title="Avg. Risk Score",
+                    card_val_id="card-16-ops",
                     color=color_palette[1],
                     font_size="2vmax",
                 ),
@@ -235,188 +236,174 @@ layout = html.Div(
 )
 
 
-@app.callback(Output("card-1-demographics", "children"), [Input("time_range", "value")])
-def card_val_1_demographics(time_range):
-    return card_value(
-        time_range,
-        demographics.avg_age,
-        "demographics",
-        "avg_age",
-        top_number_bottom_spark,
+def avg_agg_column(params, col, table):
+    """
+    Helper function for finding the average of an aggregate column 
+
+    Args:
+        params(tuple): start date and end date in format 'YYYY-MM-DD'
+        col(str): name of column to find average of
+        table(str): name of table column is in
+
+    Return:
+        float: average of column during period
+    """
+    return agg.single_value_query(
+        f"SELECT ROUND(AVG({col}), 2) FROM {table} WHERE month BETWEEN ? AND ?", params
     )
 
 
-@app.callback(Output("card-2-demographics", "children"), [Input("time_range", "value")])
-def card_val_2_demographics(time_range):
+@app.callback(Output("card-1-ops", "children"), [Input("time_range", "value")])
+def card_val_1_operations(time_range):
     return card_value(
         time_range,
-        enrollment.avg_years_enrolled,
+        enrollment.census_during_period,
         "enrollment",
-        "avg_years_enrolled",
+        "census",
         top_number_bottom_spark,
     )
 
 
-@app.callback(Output("card-3-demographics", "children"), [Input("time_range", "value")])
-def card_val_3_demographics(time_range):
+@app.callback(Output("card-2-ops", "children"), [Input("time_range", "value")])
+def card_val_2_operations(time_range):
     return card_value(
         time_range,
-        demographics.living_in_community_percent,
-        "demographics",
-        "percent_living_in_community",
+        center_enrollment.census_on_end_date,
+        "center_enrollment",
+        "pvd_census",
         top_number_bottom_spark,
+        ["Providence"],
     )
 
 
-@app.callback(Output("card-4-demographics", "children"), [Input("time_range", "value")])
-def card_val_4_demographics(time_range):
+@app.callback(Output("card-3-ops", "children"), [Input("time_range", "value")])
+def card_val_3_operations(time_range):
     return card_value(
         time_range,
-        demographics.percent_age_below_65,
-        "demographics",
-        "percent_below_65",
+        center_enrollment.census_on_end_date,
+        "center_enrollment",
+        "woon_census",
         top_number_bottom_spark,
+        ["Woonsocket"],
     )
 
 
-@app.callback(Output("card-5-demographics", "children"), [Input("time_range", "value")])
-def card_val_5_demographics(time_range):
+@app.callback(Output("card-4-ops", "children"), [Input("time_range", "value")])
+def card_val_4_operations(time_range):
     return card_value(
         time_range,
-        demographics.percent_primary_non_english,
-        "demographics",
-        "percent_primary_non_english",
+        center_enrollment.census_on_end_date,
+        "center_enrollment",
+        "wes_census",
+        top_number_bottom_spark,
+        ["Westerly"],
+    )
+
+
+@app.callback(Output("card-5-ops", "children"), [Input("time_range", "value")])
+def card_val_5_operations(time_range):
+    return card_value(
+        time_range,
+        avg_agg_column,
+        "center_enrollment",
+        "pvd_actual_census",
         left_number_right_spark,
+        ["pvd_actual_census", "center_enrollment"],
     )
 
 
-@app.callback(Output("card-6-demographics", "children"), [Input("time_range", "value")])
-def card_val_6_demographics(time_range):
+@app.callback(Output("card-6-ops", "children"), [Input("time_range", "value")])
+def card_val_6_operations(time_range):
     return card_value(
         time_range,
-        demographics.percent_non_white,
-        "demographics",
-        "percent_non_white",
+        avg_agg_column,
+        "center_enrollment",
+        "woon_actual_census",
         left_number_right_spark,
+        ["woon_actual_census", "center_enrollment"],
     )
 
 
-@app.callback(Output("card-7-demographics", "children"), [Input("time_range", "value")])
-def card_val_7_demographics(time_range):
+@app.callback(Output("card-7-ops", "children"), [Input("time_range", "value")])
+def card_val_7_operations(time_range):
     return card_value(
         time_range,
-        demographics.percent_female,
-        "demographics",
-        "percent_female",
+        avg_agg_column,
+        "center_enrollment",
+        "wes_actual_census",
         left_number_right_spark,
+        ["wes_actual_census", "center_enrollment"],
     )
 
 
-@app.callback(Output("card-8-demographics", "children"), [Input("time_range", "value")])
-def card_val_8_demographics(time_range):
+@app.callback(Output("card-8-ops", "children"), [Input("time_range", "value")])
+def card_val_8_operations(time_range):
     return card_value(
         time_range,
-        demographics.percent_dual,
-        "demographics",
-        "percent_dual_enrolled",
+        avg_agg_column,
+        "center_enrollment",
+        "pvd_pace_cancelation_rate",
         left_number_right_spark,
+        ["pvd_pace_cancelation_rate", "center_enrollment"],
     )
 
 
-@app.callback(Output("card-9-demographics", "children"), [Input("time_range", "value")])
-def card_val_9_demographics(time_range):
+@app.callback(Output("card-9-ops", "children"), [Input("time_range", "value")])
+def card_val_9_operations(time_range):
     return card_value(
         time_range,
-        demographics.percent_medicaid_only,
-        "demographics",
-        "percent_medicaid_only",
+        avg_agg_column,
+        "center_enrollment",
+        "woon_pace_cancelation_rate",
         left_number_right_spark,
+        ["woon_pace_cancelation_rate", "center_enrollment"],
     )
 
 
-@app.callback(
-    Output("card-10-demographics", "children"), [Input("time_range", "value")]
-)
-def card_val_10_demographics(time_range):
+@app.callback(Output("card-10-ops", "children"), [Input("time_range", "value")])
+def card_val_10_operations(time_range):
     return card_value(
         time_range,
-        demographics.percent_private_pay,
-        "demographics",
-        "percent_private_pay",
+        avg_agg_column,
+        "center_enrollment",
+        "wes_pace_cancelation_rate",
         left_number_right_spark,
+        ["wes_pace_cancelation_rate", "center_enrollment"],
     )
 
 
-@app.callback(
-    Output("card-11-demographics", "children"), [Input("time_range", "value")]
-)
-def card_val_11_demographics(time_range):
+@app.callback(Output("card-11-ops", "children"), [Input("time_range", "value")])
+def card_val_11_operations(time_range):
     return card_value(
         time_range,
-        demographics.behavorial_dx_percent,
+        demographics.percent_attending_dc,
         "demographics",
-        "bh_dx_percent",
+        "percent_attending_dc",
         top_number_bottom_spark,
     )
 
 
-@app.callback(
-    Output("card-12-demographics", "children"), [Input("time_range", "value")]
-)
-def card_val_12_demographics(time_range):
-    return card_value(
-        time_range,
-        demographics.over_six_chronic_conditions_percent,
-        "demographics",
-        "six_chronic_conditions",
-        top_number_bottom_spark,
-    )
+@app.callback(Output("card-12-ops", "children"), [Input("time_range", "value")])
+def card_val_12_operations(time_range):
+    return ""
 
 
-@app.callback(
-    Output("card-13-demographics", "children"), [Input("time_range", "value")]
-)
-def card_val_13_demographics(time_range):
-    return card_value(
-        time_range,
-        quality.pneumo_rate,
-        "quality",
-        "pneumo_rate",
-        top_number_bottom_spark,
-    )
+@app.callback(Output("card-13-ops", "children"), [Input("time_range", "value")])
+def card_val_13_operations(time_range):
+    return ""
 
 
-@app.callback(
-    Output("card-14-demographics", "children"), [Input("time_range", "value")]
-)
-def card_val_14_demographics(time_range):
-    return card_value(
-        time_range, quality.influ_rate, "quality", "influ_rate", top_number_bottom_spark
-    )
+@app.callback(Output("card-14-ops", "children"), [Input("time_range", "value")])
+def card_val_14_operations(time_range):
+    return ""
 
 
-@app.callback(
-    Output("card-15-demographics", "children"), [Input("time_range", "value")]
-)
-def card_val_15_demographics(time_range):
-    return card_value(
-        time_range,
-        quality.avg_days_until_nf_admission,
-        "quality",
-        "avg_days_until_nf_admission",
-        top_number_bottom_spark,
-    )
+@app.callback(Output("card-15-ops", "children"), [Input("time_range", "value")])
+def card_val_15_operations(time_range):
+    return ""
 
 
-@app.callback(
-    Output("card-16-demographics", "children"), [Input("time_range", "value")]
-)
-def card_val_16_demographics(time_range):
-    return card_value(
-        time_range,
-        quality.no_hosp_admission_last_year,
-        "quality",
-        "no_hosp_admission_last_year",
-        top_number_bottom_spark,
-    )
+@app.callback(Output("card-16-ops", "children"), [Input("time_range", "value")])
+def card_val_16_operations(time_range):
+    return ""
 

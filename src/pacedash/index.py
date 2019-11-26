@@ -1,28 +1,33 @@
+import datetime
 from flask import current_app as server
 from dash.dependencies import Output, Input
 from dash.exceptions import PreventUpdate
 import dash_html_components as html
-import datetime
 from flask_login import logout_user, current_user
 import pandas as pd
 from .app import app
 from .pages import (
-    page_not_found,
-    census,
+    create_pw,
+    default_graph_page,
     demographics,
+    demographics_eda,
+    enrollment,
+    enrollment_eda,
     incidents,
-    utilization,
-    ppt_map,
-    town_table,
-    grievances,
-    quality,
+    incidents_eda,
+    inpatient,
     login,
     login_fd,
     logout,
-    create_pw,
+    nursing_facilities,
+    operations,
+    ppt_map,
+    teams,
+    town_table,
+    utilization_eda,
 )
 from .components import Navbar
-from .helpers_configs import log_path
+from .settings import log_path
 from .utils import get_url
 
 # The router
@@ -31,18 +36,24 @@ from .utils import get_url
 # 'routes_pathname_prefix' and 'layout' is a Dash Component.
 
 urls = (
-    ("", census.layout),
+    ("", enrollment.layout),
     ("login", login.layout),
     ("logout", logout.layout),
-    ("census", census.layout),
-    ("incidents", incidents.layout),
+    ("create_password", create_pw.layout),
+    ("enrollment", enrollment.layout),
     ("demographics", demographics.layout),
-    ("utilization", utilization.layout),
+    ("incidents", incidents.layout),
+    ("utilization", inpatient.layout),
+    ("inpatient", inpatient.layout),
+    ("nursing-facility", nursing_facilities.layout),
+    ("operations", operations.layout),
+    ("teams", teams.layout),
+    ("enrollment-eda", enrollment_eda.layout),
+    ("demographics-eda", demographics_eda.layout),
+    ("incidents-eda", incidents_eda.layout),
+    ("utilization-eda", utilization_eda.layout),
     ("map", ppt_map.layout),
     ("town_count", town_table.layout),
-    ("grievances", grievances.layout),
-    ("quality", quality.layout),
-    ("create_password", create_pw.layout),
 )
 
 routes = {get_url(route): layout for route, layout in urls}
@@ -63,13 +74,16 @@ protected_paths = [
 )
 def router(pathname):
     """routes pathname to correct layout"""
-    default_layout = page_not_found(pathname)
+    if current_user.is_authenticated:
+        default_layout = default_graph_page.layout
+    else:
+        default_layout = login_fd.layout
     if pathname in protected_paths:
         if current_user.is_authenticated:
             return routes.get(pathname, default_layout)
 
         return login_fd.layout
-    elif pathname == "/logout":
+    if pathname == "/logout":
         if current_user.is_authenticated:
 
             log_file = open(log_path, "a")
@@ -105,7 +119,7 @@ def user_logout(input1):
                 "font-size": "1vmax",
                 "position": "relative",
                 "text-align": "center",
-                "width": "40vw",
+                "width": "48vw",
             },
         )
     else:

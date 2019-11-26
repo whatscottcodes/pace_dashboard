@@ -1,8 +1,5 @@
-#folders
+﻿#folders
 **/src/pacedash/data/
-
-#files
-usernames.csv
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -31,6 +28,7 @@ share/python-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+**.vscode
 MANIFEST
 
 # PyInstaller

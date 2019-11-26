@@ -1,2 +1,13 @@
 
-.icon-pori:before { content: '\e800'; } /* '' */
+.icon-down-big:before { content: '\e800'; } /* '' */
+.icon-up-big:before { content: '\e801'; } /* '' */
+.icon-down-open:before { content: '\e802'; } /* '' */
+.icon-up-open:before { content: '\e803'; } /* '' */
+.icon-down-dir:before { content: '\e804'; } /* '' */
+.icon-up-dir:before { content: '\e805'; } /* '' */
+.icon-up-circled2:before { content: '\e806'; } /* '' */
+.icon-down-circled2:before { content: '\e807'; } /* '' */
+.icon-pori:before { content: '\e808'; } /* '' */
+.icon-minus:before { content: '\e809'; } /* '' */
+.icon-angle-up:before { content: '\f106'; } /* '' */
+.icon-angle-down:before { content: '\f107'; } /* '' */

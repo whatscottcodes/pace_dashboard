@@ -3,8 +3,7 @@ import squarify
 import pandas as pd
 import numpy as np
 import sqlite3
-from .helpers_configs import (
-    color_palette,
+from .helper_functions import (
     calc_min_y,
     create_daterange,
     sql_return_df,
@@ -13,8 +12,8 @@ from .helpers_configs import (
     build_scatter_layout,
     build_bar_layout
 )
-
-from .census_utils import census_count_df
+from .settings import color_palette
+from .enrollment_eda_utils import census_count_df
 import textwrap
 
 demographic_attribute_options = [
@@ -41,7 +40,7 @@ graph_types = {
     ],
     "race": [
         {"label": "Line", "value": "race_bar"},
-        {"label": "Square", "value": "race_sqaure"},
+        {"label": "Square", "value": "race_square"},
         {"label": "Percent Trend", "value": "race_trend"},
     ],
     "lang": [
@@ -60,15 +59,15 @@ def demographic_df(start_date, end_date, center, cols, date_cols=None):
     date range and with specified columns
 
     Args:
-        start_date: First date to include in resulting dateframe
+        start_date: First date to include in resulting dataframe
 
-        end_date: Last date to include in resulting dateframe
+        end_date: Last date to include in resulting dataframe
         
         center: Name of PACE center
         
         cols: List of column names to be included in the SQL query
 
-        date_cols: names of columns to be parased using pandas datetime
+        date_cols: names of columns to be parsed using pandas datetime
 
     Returns:
         df: dataframe of demographic table during given
@@ -83,6 +82,7 @@ def demographic_df(start_date, end_date, center, cols, date_cols=None):
     SELECT {', '.join(col for col in cols)}
     FROM demographics d
     JOIN enrollment e ON d.member_id = e.member_id
+    JOIN centers on e.member_id=centers.member_id
     WHERE (disenrollment_date >= ?
     OR disenrollment_date IS NULL)
     AND e.enrollment_date <= ?
@@ -108,7 +108,7 @@ def create_square_graph(value_dict, df_shape, plot_title):
 
 
     Returns:
-         dict: contianging plotly figure data and layout information
+         dict: containing plotly figure data and layout information
     """
     values = [*value_dict.keys()]
     values.sort(reverse=True)  #redefine label order
@@ -215,15 +215,15 @@ def percent_trend_graph(df, mask, plot_title, color, start_date,
 
     Args:
         df: pandas dataframe containing related demographic information
-        start_date: First date to include in plotting dateframe
+        start_date: First date to include in plotting dataframe
 
         plot_title: title of plot
 
         color: line color
 
-        start_date: First date included in plotting dateframe
+        start_date: First date included in plotting dataframe
 
-        end_date: Last date included in plotting dateframe
+        end_date: Last date included in plotting dataframe
 
         center: Name of PACE center
 
@@ -233,14 +233,14 @@ def percent_trend_graph(df, mask, plot_title, color, start_date,
             census_count_df will be created.
 
      Returns:
-         dict: contianging plotly figure data and layout information
+         dict: containing plotly figure data and layout information
     """
     #two helper functions
     def percent_count(df, *masks):
         """
         When the dataframe contains all participants and needs to be
         filtered for demographic group and enrollment this
-        count fucntion is used
+        count function is used
         """
         enroll_mask, disenroll_mask, mask = masks
         return round((
@@ -251,7 +251,7 @@ def percent_trend_graph(df, mask, plot_title, color, start_date,
     def raw_count(df, *masks):
         """
         When the dataframe has already been filter for the
-        selected demographic group this count fucntion is used
+        selected demographic group this count function is used
         """
         enroll_mask, disenroll_mask, _ = masks
         return len(df[enroll_mask & disenroll_mask]["member_id"].unique())
@@ -275,7 +275,7 @@ def percent_trend_graph(df, mask, plot_title, color, start_date,
     plot_df.rename(columns = {'index':'Freq'}, inplace=True)
 
     if use_raw_count:
-        pmpm_df = census_count_df(center, start_date, end_date, "M")
+        pmpm_df = census_count_df(center, start_date, end_date, "MS")
         plot_df["Percent"] = round((plot_df["Percent"] / pmpm_df["Census"]) * 100, 2)
 
     fig_data = [
@@ -304,12 +304,12 @@ def demographic_line_plot(demographic, plot_title, center, start_date, end_date)
         
         center: Name of PACE center
 
-        start_date: First date included in plotting dateframe
+        start_date: First date included in plotting dataframe
 
-        end_date: Last date included in plotting dateframe
+        end_date: Last date included in plotting dataframe
 
      Returns:
-         dict: contianging plotly figure data and layout information
+         dict: containing plotly figure data and layout information
     """
     #helper function
     def monthly_count(df, demographic, enroll_mask, disenroll_mask):
@@ -421,14 +421,14 @@ def age_hist(start_date, end_date, center):
     possibly filtered by center
 
     Args:
-        start_date: First date included in plotting dateframe
+        start_date: First date included in plotting dataframe
 
-        end_date: Last date included in plotting dateframe
+        end_date: Last date included in plotting dataframe
 
         center: Name of PACE center
 
      Returns:
-         dict: contianging plotly figure data and layout information
+         dict: containing plotly figure data and layout information
     """
     df = demographic_df(start_date, end_date, center, ["d.dob"], ["dob"])
 
@@ -446,14 +446,14 @@ def age_square(start_date, end_date, center):
     value, and percent annotations
 
     Args:
-        start_date: First date included in plotting dateframe
+        start_date: First date included in plotting dataframe
 
-        end_date: Last date included in plotting dateframe
+        end_date: Last date included in plotting dataframe
 
         center: Name of PACE center
 
      Returns:
-         dict: contianging plotly figure data and layout information
+         dict: containing plotly figure data and layout information
     """
     df = demographic_df(
         start_date,
@@ -483,14 +483,14 @@ def avg_age_line(start_date, end_date, center):
     possibly filtered by center
 
     Args:
-        start_date: First date included in plotting dateframe
+        start_date: First date included in plotting dataframe
 
-        end_date: Last date included in plotting dateframe
+        end_date: Last date included in plotting dataframe
 
         center: Name of PACE center
 
      Returns:
-         dict: contianging plotly figure data and layout information
+         dict: containing plotly figure data and layout information
     """
     df = demographic_df(
         start_date,
@@ -535,14 +535,14 @@ def gender_hist(start_date, end_date, center):
     possibly filtered by center
 
     Args:
-        start_date: First date included in plotting dateframe
+        start_date: First date included in plotting dataframe
 
-        end_date: Last date included in plotting dateframe
+        end_date: Last date included in plotting dataframe
 
         center: Name of PACE center
 
      Returns:
-         dict: contianging plotly figure data and layout information
+         dict: containing plotly figure data and layout information
     """
 
     df = demographic_df(start_date, end_date, center, ["d.dob", "d.gender"], ["dob"])
@@ -624,14 +624,14 @@ def gender_pie(start_date, end_date, center):
     possibly filtered by center
 
     Args:
-        start_date: First date included in plotting dateframe
+        start_date: First date included in plotting dataframe
 
-        end_date: Last date included in plotting dateframe
+        end_date: Last date included in plotting dataframe
 
         center: Name of PACE center
 
      Returns:
-         dict: contianging plotly figure data and layout information
+         dict: containing plotly figure data and layout information
     """
     df = demographic_df(start_date, end_date, center, ["d.gender"])
 
@@ -675,14 +675,14 @@ def gender_trend(start_date, end_date, center):
     possibly filtered by center
 
     Args:
-        start_date: First date included in plotting dateframe
+        start_date: First date included in plotting dataframe
 
-        end_date: Last date included in plotting dateframe
+        end_date: Last date included in plotting dataframe
 
         center: Name of PACE center
 
      Returns:
-         dict: contianging plotly figure data and layout information
+         dict: containing plotly figure data and layout information
     """
     df = demographic_df(
         start_date,
@@ -705,14 +705,14 @@ def race_line(start_date, end_date, center):
     Args:
         center: Name of PACE center
 
-        start_date: First date included in plotting dateframe
+        start_date: First date included in plotting dataframe
 
-        end_date: Last date included in plotting dateframe
+        end_date: Last date included in plotting dataframe
 
         center: Name of PACE center
 
      Returns:
-         dict: contianging plotly figure data and layout information
+         dict: containing plotly figure data and layout information
     """
     return demographic_line_plot('race',
                             "Race/Ethnicity by Quarter</b>",
@@ -726,14 +726,14 @@ def race_square(start_date, end_date, center):
     value, and percent annotations
 
     Args:
-        start_date: First date included in plotting dateframe
+        start_date: First date included in plotting dataframe
 
-        end_date: Last date included in plotting dateframe
+        end_date: Last date included in plotting dataframe
 
         center: Name of PACE center
 
      Returns:
-         dict: contianging plotly figure data and layout information
+         dict: containing plotly figure data and layout information
     """
     df = demographic_df(start_date, end_date, center, ["d.race"])
 
@@ -755,14 +755,14 @@ def race_trend(start_date, end_date, center):
     possibly filtered by center
 
     Args:
-        start_date: First date included in plotting dateframe
+        start_date: First date included in plotting dataframe
 
-        end_date: Last date included in plotting dateframe
+        end_date: Last date included in plotting dataframe
 
         center: Name of PACE center
 
      Returns:
-         dict: contianging plotly figure data and layout information
+         dict: containing plotly figure data and layout information
     """
     df = demographic_df(
         start_date,
@@ -785,14 +785,14 @@ def lang_line(start_date, end_date, center):
     language spoken group for a given date range
 
     Args:
-        start_date: First date included in plotting dateframe
+        start_date: First date included in plotting dataframe
 
-        end_date: Last date included in plotting dateframe
+        end_date: Last date included in plotting dataframe
 
         center: Name of PACE center
 
      Returns:
-         dict: contianging plotly figure data and layout information
+         dict: containing plotly figure data and layout information
     """
     return demographic_line_plot('language',
                             "Primary Language by Quarter",
@@ -806,14 +806,14 @@ def lang_square(start_date, end_date, center):
     value, and percent annotations
 
     Args:
-        start_date: First date included in plotting dateframe
+        start_date: First date included in plotting dataframe
 
-        end_date: Last date included in plotting dateframe
+        end_date: Last date included in plotting dataframe
 
         center: Name of PACE center
 
      Returns:
-         dict: contianging plotly figure data and layout information
+         dict: containing plotly figure data and layout information
     """
     df = demographic_df(start_date, end_date, center, ["d.language"])
 
@@ -831,14 +831,14 @@ def lang_trend(start_date, end_date, center):
     possibly filtered by center
 
     Args:
-        start_date: First date included in plotting dateframe
+        start_date: First date included in plotting dataframe
 
-        end_date: Last date included in plotting dateframe
+        end_date: Last date included in plotting dataframe
 
         center: Name of PACE center
 
      Returns:
-         dict: contianging plotly figure data and layout information
+         dict: containing plotly figure data and layout information
     """
     df = demographic_df(
         start_date,
@@ -861,14 +861,14 @@ def dementia_trend(start_date, end_date, center):
     possibly filtered by center
 
     Args:
-        start_date: First date included in plotting dateframe
+        start_date: First date included in plotting dataframe
 
-        end_date: Last date included in plotting dateframe
+        end_date: Last date included in plotting dataframe
 
         center: Name of PACE center
 
      Returns:
-         dict: contianging plotly figure data and layout information
+         dict: containing plotly figure data and layout information
     """
     params = [
         pd.to_datetime(start_date).date(),
@@ -881,6 +881,7 @@ def dementia_trend(start_date, end_date, center):
         SELECT dx.member_id, e.enrollment_date, e.disenrollment_date
         FROM dx
         JOIN enrollment e ON dx.member_id=e.member_id
+        JOIN centers on e.member_id=centers.member_id
         WHERE (instr(icd10, 'F00') > 0
         OR instr(icd10, 'F01') > 0
         OR instr(icd10, 'F02') > 0
@@ -908,14 +909,14 @@ def bh_trend(start_date, end_date, center):
     in a given date range and possibly filtered by center
 
     Args:
-        start_date: First date included in plotting dateframe
+        start_date: First date included in plotting dataframe
 
-        end_date: Last date included in plotting dateframe
+        end_date: Last date included in plotting dataframe
 
         center: Name of PACE center
 
      Returns:
-         dict: contianging plotly figure data and layout information
+         dict: containing plotly figure data and layout information
     """
     params = [
         pd.to_datetime(start_date).date(),
@@ -929,6 +930,7 @@ def bh_trend(start_date, end_date, center):
         SELECT dx.member_id, e.enrollment_date, e.disenrollment_date
         FROM dx
         JOIN enrollment e ON dx.member_id=e.member_id
+        JOIN centers on e.member_id=centers.member_id
         WHERE (instr(icd10, 'F2') > 0
         OR instr(icd10, 'F31') > 0
         OR instr(icd10, 'F32') > 0
@@ -960,7 +962,7 @@ chart_functions = {
     "gen_pie": gender_pie,
     "gen_trend": gender_trend,
     "race_bar": race_line,
-    "race_sqaure": race_square,
+    "race_square": race_square,
     "race_trend": race_trend,
     "lang_bar": lang_line,
     "lang_square": lang_square,
@@ -970,389 +972,3 @@ chart_functions = {
     "chronic_trend": None,
 }
 
-#CARDS
-def dx_rate(dx, start_date, end_date, center):
-    """
-    Calculates percent of pariticpants with either a behvioral health dx
-    (if dx=bh) or dementia(dx=dementia)
-
-    Args:
-
-        dx: can be "bh" or "dementia", will provide percent of participants
-        over date range with a related dx
-
-        start_date: First date included in plotting dateframe
-
-        end_date: Last date included in plotting dateframe
-
-        center: Name of PACE center
-
-     Returns:
-         float: percent with related dx, rounded to 2 decimal places
-    """
-    params = [
-        pd.to_datetime(start_date).date(),
-        pd.to_datetime(end_date).date(),
-    ]
-
-    center_sql, params = create_center_sql(center, params)
-
-    if dx == "bh":
-        dx_str = """(instr(icd10, 'F2') > 0
-            OR instr(icd10, 'F31') > 0
-            OR instr(icd10, 'F32') > 0
-            OR instr(icd10, 'F33') > 0
-            OR instr(icd10, 'F4') > 0
-            OR instr(icd10, 'F6') > 0)
-                """
-    elif dx == "dementia":
-        dx_str = """(instr(icd10, 'F00') > 0
-            OR instr(icd10, 'F01') > 0
-            OR instr(icd10, 'F02') > 0
-            OR instr(icd10, 'F03') > 0
-            OR instr(icd10, 'G3') > 0)
-            """
-
-    bh_dx_query = f"""
-        SELECT COUNT(DISTINCT(dx.member_id)) FROM dx
-        JOIN enrollment e ON dx.member_id=e.member_id
-        WHERE {dx_str}
-        AND (disenrollment_date >= ?
-        OR disenrollment_date IS NULL)
-        AND (enrollment_date <= ?)
-        {center_sql};
-        """
-
-    enrolled_query = f"""
-            SELECT COUNT(*)
-            FROM enrollment e
-            WHERE e.disenrollment_date >= ?
-            OR e.disenrollment_date IS NULL
-            AND e.enrollment_date <= ?
-            {center_sql};
-            """
-
-    conn = sqlite3.connect(db_filepath)
-    c = conn.cursor()
-    
-    result = (
-        c.execute(bh_dx_query, params).fetchone()[0]
-        / c.execute(enrolled_query, params).fetchone()[0]
-    ) * 100
-
-    conn.close()
-    return round(result, 2)
-
-def avg_age(start_date, end_date, center):
-    """
-    Calculates average age of pariticpants for a given date range 
-    and possibly filtered by center
-
-    Args:
-
-        start_date: First date included in plotting dateframe
-
-        end_date: Last date included in plotting dateframe
-
-        center: Name of PACE center
-
-     Returns:
-         float: avg participant age
-    """
-    params = [
-        pd.to_datetime(end_date).date(),
-        pd.to_datetime(start_date).date(),
-        pd.to_datetime(end_date).date(),
-    ]
-
-    center_sql, params = create_center_sql(center, params)
-
-    query = f"""
-        SELECT ROUND(AVG((ifnull(julianday(e.disenrollment_date), julianday(?)) - julianday(d.dob)) / 365.25), 2)
-        FROM demographics d
-        JOIN enrollment e ON d.member_id = e.member_id
-        WHERE (e.disenrollment_date >= ? OR e.disenrollment_date IS NULL)
-        AND e.enrollment_date <= ?
-        {center_sql};
-        """
-    
-    conn = sqlite3.connect(db_filepath)
-    c = conn.cursor()
-
-    result = c.execute(query, params).fetchone()[0]
-
-    conn.close()
-    return str(result)
-
-def avg_years_enrolled(start_date, end_date, center):
-    """
-    Calculates average number of years pariticpants are enrolled
-     for a given date range and filtered by center
-
-    Args:
-
-        start_date: First date included in plotting dateframe
-
-        end_date: Last date included in plotting dateframe
-
-        center: Name of PACE center
-
-     Returns:
-         float: average number of years pariticpants are enrolled
-    """
-    params = [
-        pd.to_datetime(end_date).date(),
-        pd.to_datetime(start_date).date(),
-        pd.to_datetime(end_date).date(),
-    ]
-
-    center_sql, params = create_center_sql(center, params)
-
-    query = f"""
-        SELECT ROUND(AVG((ifnull(julianday(disenrollment_date), julianday(?)) - julianday(enrollment_date)) / 365.25), 2)
-        FROM enrollment
-        WHERE (disenrollment_date >= ? OR disenrollment_date IS NULL)
-        AND enrollment_date <= ?
-        {center_sql};
-        """
-    
-    conn = sqlite3.connect(db_filepath)
-    c = conn.cursor()
-
-    result = c.execute(query, params).fetchone()[0]
-
-    conn.close()
-    return str(result)
-
-def attnd_day_center(start_date, end_date, center):
-    """
-    Calculates the number of pariticpants attending the day center
-    for a given date range and filtered by center
-
-    Args:
-
-        start_date: First date included in plotting dateframe
-
-        end_date: Last date included in plotting dateframe
-
-        center: Name of PACE center
-
-     Returns:
-         int: number of pariticpants attending the day center
-    """
-    params = [pd.to_datetime(start_date).date(), pd.to_datetime(end_date).date()]
-
-    center_sql, params = create_center_sql(center, params)
-
-    query = f"""
-        SELECT COUNT(DISTINCT(cd.member_id))
-        FROM center_days cd
-        JOIN enrollment e ON cd.member_id = e.member_id
-        WHERE (e.disenrollment_date >= ? OR e.disenrollment_date IS NULL)
-        AND e.enrollment_date <= ?
-        AND cd.days != 'PRN'
-        {center_sql};
-        """
-
-    conn = sqlite3.connect(db_filepath)
-    c = conn.cursor()
-
-    result = c.execute(query, params).fetchone()[0]
-
-    conn.close()
-
-    return str(result)
-
-def non_english_percent(start_date, end_date, center):
-    """
-    Calculates the percent of pariticpants who do not speak
-    english as their primary language for a given date
-    range and filtered by center
-
-    Args:
-        start_date: First date included in plotting dateframe
-
-        end_date: Last date included in plotting dateframe
-
-        center: Name of PACE center
-
-     Returns:
-         float: percent of pariticpants who do not speak
-            english as their primary language
-    """
-    params = [pd.to_datetime(start_date).date(), pd.to_datetime(end_date).date()]
-
-    center_sql, params = create_center_sql(center, params)
-
-    query = f"""
-        SELECT ROUND(SUM(CASE when d.language != 'English' then 1 else 0 end) * 100.00 / count(*), 2)
-        FROM demographics d
-        JOIN enrollment e ON d.member_id = e.member_id
-        WHERE (e.disenrollment_date >= ? OR e.disenrollment_date IS NULL)
-        AND e.enrollment_date <= ?
-        {center_sql};
-        """
-
-    conn = sqlite3.connect(db_filepath)
-    c = conn.cursor()
-
-    result = c.execute(query, params).fetchone()[0]
-
-    conn.close()
-
-    return str(result)
-
-def non_white_percent(start_date, end_date, center):
-    """
-    Calculates the percent of pariticpants who are not
-    white/Caucasian for a given date range and filtered by center
-
-    Args:
-        start_date: First date included in plotting dateframe
-
-        end_date: Last date included in plotting dateframe
-
-        center: Name of PACE center
-
-     Returns:
-         float: percent of pariticpants who are not white/Caucasian
-    """
-    params = [pd.to_datetime(start_date).date(), pd.to_datetime(end_date).date()]
-
-    center_sql, params = create_center_sql(center, params)
-
-    query = f"""
-        SELECT ROUND(SUM(CASE when d.race != 'Caucasian/White' then 1 else 0 end) * 100.00 / count(*), 2)
-        FROM demographics d
-        JOIN enrollment e ON d.member_id = e.member_id
-        WHERE (e.disenrollment_date >= ? OR e.disenrollment_date IS NULL)
-        AND e.enrollment_date <= ?
-        {center_sql};
-        """
-
-    conn = sqlite3.connect(db_filepath)
-    c = conn.cursor()
-
-    result = c.execute(query, params).fetchone()[0]
-
-    conn.close()
-
-    return result
-
-def dual_enrolled_percent(start_date, end_date, center):
-    """
-    Calculates the percent of pariticpants who are enrolled with
-    both Medicaid and Medicare for a given date
-    range and filtered by center
-
-    Args:
-        start_date: First date included in plotting dateframe
-
-        end_date: Last date included in plotting dateframe
-
-        center: Name of PACE center
-
-     Returns:
-         float: percent of pariticpants who are enrolled with
-            both Medicaid and Medicare
-    """
-    params = [pd.to_datetime(start_date).date(), pd.to_datetime(end_date).date()]
-
-    center_sql, params = create_center_sql(center, params)
-
-    query = f"""
-        SELECT ROUND(SUM(medicare) * 100.0 / count(*), 2)
-        FROM enrollment
-        WHERE (disenrollment_date >= ? OR disenrollment_date IS NULL)
-        AND enrollment_date <= ?
-        AND medicaid NOT NULL
-        {center_sql};"""
-
-    conn = sqlite3.connect(db_filepath)
-    c = conn.cursor()
-
-    result = c.execute(query, params).fetchone()[0]
-
-    conn.close()
-
-    return result
-
-def pneumo_vacc_rate(start_date, end_date, center):
-    """
-    Calculates the pneumococcal vaccination rate
-    for a given date range and filtered by center
-
-    Args:
-        start_date: First date included in plotting dateframe
-
-        end_date: Last date included in plotting dateframe
-
-        center: Name of PACE center
-
-     Returns:
-         float: pneumococcal vaccination rate
-    """
-    params = [
-        pd.to_datetime(end_date).date(),
-        pd.to_datetime(start_date).date(),
-        pd.to_datetime(end_date).date(),
-    ]
-
-    center_sql, params = create_center_sql(center, params)
-
-    query = f"""
-        SELECT ROUND(SUM(CASE when pneumo.immunization_status NOT NULL then 1 else 0 end) * 100.00 / count(*), 2),
-        ROUND((ifnull(julianday(e.disenrollment_date), julianday(?)) - julianday(d.dob)) / 365.25) as age
-        FROM enrollment e
-        LEFT JOIN demographics d ON e.member_id = d.member_id
-        LEFT JOIN pneumo ON d.member_id = pneumo.member_id
-        WHERE (e.disenrollment_date >= ? OR e.disenrollment_date IS NULL)
-        AND e.enrollment_date <= ?
-        AND age > 64
-        {center_sql};"""
-
-    conn = sqlite3.connect(db_filepath)
-    c = conn.cursor()
-
-    result = c.execute(query, params).fetchone()[0]
-
-    conn.close()
-
-    return result
-
-def influ_vacc_rate(start_date, end_date, center):
-    """
-    Calculates the influenza vaccination rate
-    for a given date range and filtered by center
-
-    Args:
-        start_date: First date included in plotting dateframe
-
-        end_date: Last date included in plotting dateframe
-
-        center: Name of PACE center
-
-     Returns:
-         float: influenza vaccination rate
-    """
-    params = [pd.to_datetime(start_date).date(), pd.to_datetime(end_date).date()]
-
-    center_sql, params = create_center_sql(center, params)
-
-    query = f"""
-        SELECT ROUND(SUM(CASE when influ.immunization_status NOT NULL then 1 else 0 end) * 100.00 / count(*), 2)
-        FROM enrollment e
-        LEFT JOIN influ
-        ON e.member_id = influ.member_id
-        WHERE (e.disenrollment_date >= ? OR e.disenrollment_date IS NULL)
-        AND e.enrollment_date <= ?
-        {center_sql};"""
-
-    conn = sqlite3.connect(db_filepath)
-    c = conn.cursor()
-
-    result = c.execute(query, params).fetchone()[0]
-
-    conn.close()
-
-    return result
