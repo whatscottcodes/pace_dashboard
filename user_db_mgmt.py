@@ -140,7 +140,7 @@ def main(action, db_path, csv_path, username, first, last, email, has_password=0
         "delete user": (delete_user, [db_path, username]),
         "add user": (
             insert_user,
-            [db_path, username, first, last, email, int(has_password)],
+            [db_path, username, first, last, email, has_password],
         ),
         "update from csv": (update_from_csv, [db_path, csv_path]),
         "create from csv": (create_from_csv, [db_path, csv_path]),
@@ -148,7 +148,7 @@ def main(action, db_path, csv_path, username, first, last, email, has_password=0
 
     db_action, args = user_func[action]
 
-    return db_action(**args)
+    return db_action(*args)
 
 
 if __name__ == "__main__":
@@ -190,11 +190,6 @@ if __name__ == "__main__":
         default=None,
         help="email of user to be inserted (including address). Not needed for deletion of user or csv related actions.",
     )
-    parser.add_argument(
-        "has_password",
-        type=str,
-        default=None,
-        help="Does the user have a password in the users table? 1 if they do, 0 if they do not. Not needed for deletion of user or csv related actions.",
-    )
+
     arguments = parser.parse_args()
     main(**vars(arguments))
