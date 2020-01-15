@@ -137,13 +137,13 @@ def create_from_csv(db_path, csv_path):
 
 def main(action, db_path, csv_path, username, first, last, email, has_password=0):
     user_func = {
-        "delete user": (delete_user, [db_path, username]),
-        "add user": (
+        "delete_user": (delete_user, [db_path, username]),
+        "add_user": (
             insert_user,
             [db_path, username, first, last, email, has_password],
         ),
-        "update from csv": (update_from_csv, [db_path, csv_path]),
-        "create from csv": (create_from_csv, [db_path, csv_path]),
+        "update_from_csv": (update_from_csv, [db_path, csv_path]),
+        "create_from_csv": (create_from_csv, [db_path, csv_path]),
     }
 
     db_action, args = user_func[action]
