@@ -66,7 +66,7 @@ indictors_to_url = {
     "Acute 30 Day Readmits": "team_utl-readmits",
     "Age": "team_info-avg_age",
     "Percent Non English": "team_info-percent_primary_non_english",
-    "Avg Years Enrolled": "team_info-avg_years_enrolled",
+    "Avg_Years_Enrolled": "team_info-avg_years_enrolled",
     "Ppts In Custodial": "team_utl-custodial_ppts",
     "Mortality Rate": "team_info-mortality",
     "% Of Discharges With Death Within 30 Days": "team_utl-percent_of_discharges_with_mortality_in_30",
