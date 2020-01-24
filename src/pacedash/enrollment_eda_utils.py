@@ -72,9 +72,10 @@ def enrollment_df(center, cols):
     JOIN centers on enrollment.member_id=centers.member_id
     {center_sql};
     """
-
+    if "enrollment.member_id" in cols:
+        return sql_return_df(query, params, ["enrollment_date", "disenrollment_date"]).drop_duplicates(subset="member_id")
+    
     return sql_return_df(query, params, ["enrollment_date", "disenrollment_date"])
-
 
 def disenroll_reasons_df(center):
     """
@@ -228,7 +229,7 @@ def census_count_df(
         "QS": (quarterly_census_count, quarter_dict_key),
     }
 
-    df = enrollment_df(center, cols=["enrollment_date", "disenrollment_date"])
+    df = enrollment_df(center, cols=["enrollment.member_id", "enrollment_date", "disenrollment_date"])
     census_dict = {}
 
     count_func, dict_key = counter_func_dict[freq]
@@ -326,7 +327,7 @@ def enrollment_changes(start_date, end_date, freq, center):
     """
     freq = freq[0]
     df = enrollment_df(
-        center, ["enrollment_date", "disenrollment_date", "disenroll_type"]
+        center, ["enrollment.member_id", "enrollment_date", "disenrollment_date", "disenroll_type"]
     )
 
     df["enrollment_date"] = df["enrollment_date"].dt.to_period(freq[0])
@@ -337,9 +338,9 @@ def enrollment_changes(start_date, end_date, freq, center):
     end_date = pd.to_datetime(end_date) + pd.offsets.MonthEnd(1)
 
     for single_date in create_daterange(start_date, end_date, freq, update=False):
-        prev_month = (single_date-pd.DateOffset(months=1)).to_period(freq)
+        prev_month = (single_date - pd.DateOffset(months=1)).to_period(freq)
         single_date = single_date.to_period(freq)
-        
+
         if freq == "QS":
             dict_key = str(single_date.year) + quarter_dict[single_date.month]
         else:
@@ -361,7 +362,7 @@ def enrollment_changes(start_date, end_date, freq, center):
     plot_df.rename(columns={"index": "Freq"}, inplace=True)
     plot_df["Freq"] = plot_df["Freq"].astype(str)
 
-    #plot_df["net"] = plot_df["enrollments"][1:] - plot_df["disenrollments"][:-1]
+    # plot_df["net"] = plot_df["enrollments"][1:] - plot_df["disenrollments"][:-1]
 
     if freq == "QS":
         legend = dict(orientation="h", y=-0.15)
@@ -570,6 +571,7 @@ def disenroll_reasons(start_date, end_date, freq, center):
     )
 
     return dict(data=fig_data, layout=fig_layout)
+
 
 ### used to assign a drop down value to the correct graph
 graph_choice = {
