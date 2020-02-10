@@ -456,7 +456,7 @@ def incidents_df(start_date, end_date, incident, center, freq):
     center_sql, params = create_center_sql(center, params)
  
     query = f"""
-    SELECT i.* FROM {incident} i
+    SELECT DISTINCT i.* FROM {incident} i
     JOIN centers on i.member_id=centers.member_id
     WHERE i.date_time_occurred BETWEEN ? AND ?
     {center_sql};
@@ -588,11 +588,9 @@ def update_graph(
 
     if len(plot_cols) == 1:
         plot_df = pd.concat([plot_df, pd.get_dummies(plot_df[plot_cols], prefix='', prefix_sep='')], axis=1)
-
     plot_df = plot_df.groupby(["date"]).sum().reset_index()
     
     totals = get_total_incidents(incident, start_date, end_date, freq, center)
-
     if (incident_details is None) or (len(incident_details) == 0):
         included_cols = (
             plot_df[[col for col in plot_df.columns if col != 'date']].sum().sort_values(ascending=False)[: int(amount)].index.tolist()
@@ -671,9 +669,8 @@ def update_trending_graph(incident, start_date, end_date, freq, measure, center,
             pmpm_df = census_count_df(center, start_date, end_date, freq, quarter_pmpm=True)
         else:
             pmpm_df = census_count_df(center, start_date, end_date, freq)
-
         plot_df["count"] = (plot_df["count"] / pmpm_df["Census"]) * 100
-
+        
         plot_title = f"{titlecase(incident)} Per 100 Participants"
     else:
         plot_title = f"{titlecase(incident)} Total"

@@ -187,7 +187,6 @@ def update_dates(start_date, end_date, freq):
 
     Returns: start_date, end_date
     """
-
     if (freq == "MS") or (freq == "M"):
         try:
             start_date = start_date.split("/")
@@ -196,6 +195,7 @@ def update_dates(start_date, end_date, freq):
             start_date = [start_date.month, start_date.day, start_date.year]
             end_date = [end_date.month, end_date.day, end_date.year]
         if int(end_date[1]) < 22:
+
             if int(end_date[0]) == 1:
                 end_month = 12
                 end_year = int(end_date[2]) - 1
@@ -213,11 +213,10 @@ def update_dates(start_date, end_date, freq):
         )
 
     if (freq == "QS") or (freq == "Q"):
-        start_date = pd.to_datetime(start_date) - pd.offsets.QuarterBegin(
+        start_date = (pd.to_datetime(start_date) + pd.tseries.offsets.DateOffset(days=1)) - pd.offsets.QuarterBegin(
             startingMonth=1
         )
-
-        end_date = pd.to_datetime(end_date) - pd.offsets.QuarterEnd()
+        end_date = (pd.to_datetime(end_date) + pd.tseries.offsets.DateOffset(days=1)) - pd.offsets.QuarterEnd()
 
     return (start_date, end_date)
 
@@ -281,7 +280,7 @@ def create_center_sql(center, params):
         parameterized query
     """
     if center != "all":
-        center_sql = f"AND center = ?"
+        center_sql = f"AND centers.center = ?"
         params += [f"{center}"]
     else:
         center_sql = ""

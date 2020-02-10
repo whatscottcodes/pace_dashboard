@@ -27,14 +27,15 @@ layout = html.Div(
                                 small_clear_card("Census", get_census()),
                                 small_clear_card(
                                     "Providence",
-                                    get_census("AND center = 'Providence'"),
+                                    get_census("AND enrollment.center = 'Providence'"),
                                 ),
                                 small_clear_card(
-                                    "Westerly", get_census("AND center = 'Westerly'")
+                                    "Westerly",
+                                    get_census("AND enrollment.center = 'Westerly'"),
                                 ),
                                 small_clear_card(
                                     "Woonsocket",
-                                    get_census("AND center = 'Woonsocket'"),
+                                    get_census("AND enrollment.center = 'Woonsocket'"),
                                 ),
                             ],
                             style={

@@ -9,6 +9,7 @@ from .helper_functions import (
     build_bar_layout,
     db_filepath,
     create_center_sql,
+    enrollment
 )
 from .settings import color_palette
 
@@ -60,7 +61,7 @@ def enrollment_df(center, cols):
     """
 
     if center != "all":
-        center_sql = f"WHERE center = ?"
+        center_sql = f"WHERE centers.center = ?"
         params = [f"{center}"]
     else:
         center_sql = ""
@@ -121,6 +122,8 @@ def monthly_census_count(df, month_date, *quarter_pmpm):
     disenroll_mask = (df.disenrollment_date >= month_date) | (
         df.disenrollment_date.isnull()
     )
+    print(month_date.strftime("%Y-%m-%d"))
+    print(enrollment.member_months([month_date.strftime("%Y-%m-%d")]*2))
     return df[enroll_mask & disenroll_mask].shape[0]
 
 
@@ -225,15 +228,14 @@ def census_count_df(
     """
 
     counter_func_dict = {
-        "MS": (monthly_census_count, month_dict_key),
-        "QS": (quarterly_census_count, quarter_dict_key),
+        "MS": (month_dict_key, 1),
+        "QS": (quarter_dict_key, 3),
     }
 
     df = enrollment_df(center, cols=["enrollment.member_id", "enrollment_date", "disenrollment_date"])
     census_dict = {}
 
-    count_func, dict_key = counter_func_dict[freq]
-
+    dict_key, offset = counter_func_dict[freq]
     update = True
     if as_of_first:
         start_date = pd.to_datetime(start_date) - pd.offsets.MonthBegin(1)
@@ -241,7 +243,8 @@ def census_count_df(
         update = False
 
     for freq_start in create_daterange(start_date, end_date, freq, update=update):
-        census_dict[dict_key(freq_start)] = count_func(df, freq_start, quarter_pmpm)
+        freq_end = freq_start + pd.offsets.MonthEnd(offset)
+        census_dict[dict_key(freq_start)] = enrollment.member_months((freq_start.strftime("%Y-%m-%d"), freq_end.strftime("%Y-%m-%d")))
 
     count_df = pd.DataFrame.from_dict(census_dict, orient="index").reset_index()
     count_df.rename(columns={"index": "Freq", 0: "Census"}, inplace=True)

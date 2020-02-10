@@ -5,10 +5,10 @@ from .users_mgt import db, User as base
 from .run_db_update import update_db, update_files
 
 # update dashboard database upon start
-update_db()
+# update_db()
 
 # update dashboard files upon start
-update_files()
+# update_files()
 
 # The Flask instance
 server = create_app()
