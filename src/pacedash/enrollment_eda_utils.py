@@ -61,7 +61,7 @@ def enrollment_df(center, cols):
     """
 
     if center != "all":
-        center_sql = f"WHERE centers.center = ?"
+        center_sql = f"WHERE center = ?"
         params = [f"{center}"]
     else:
         center_sql = ""
@@ -70,12 +70,9 @@ def enrollment_df(center, cols):
     query = f"""
     SELECT {', '.join(col for col in cols)}
     FROM enrollment
-    JOIN centers on enrollment.member_id=centers.member_id
     {center_sql};
     """
-    if "enrollment.member_id" in cols:
-        return sql_return_df(query, params, ["enrollment_date", "disenrollment_date"]).drop_duplicates(subset="member_id")
-    
+
     return sql_return_df(query, params, ["enrollment_date", "disenrollment_date"])
 
 def disenroll_reasons_df(center):
@@ -122,8 +119,7 @@ def monthly_census_count(df, month_date, *quarter_pmpm):
     disenroll_mask = (df.disenrollment_date >= month_date) | (
         df.disenrollment_date.isnull()
     )
-    print(month_date.strftime("%Y-%m-%d"))
-    print(enrollment.member_months([month_date.strftime("%Y-%m-%d")]*2))
+
     return df[enroll_mask & disenroll_mask].shape[0]
 
 
