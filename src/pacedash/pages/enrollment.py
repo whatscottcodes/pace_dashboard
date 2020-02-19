@@ -4,7 +4,7 @@ from dash.dependencies import Input, Output
 
 from ..app import app
 from ..components import Col, Row
-from ..helper_functions import enrollment, card_value
+from ..helper_functions import enrollment, card_value, agg
 from ..settings import color_palette
 
 from ..layouts import (
@@ -90,40 +90,40 @@ layout = html.Div(
         Row(
             [
                 card_col(
-                    card_title="Website Visits",
+                    card_title="Avg. Attendance PVD",
                     card_val_id="card-11-enrollment",
                     color=color_palette[1],
-                    font_size="2vmax",
+                    font_size="1.25vmax",
                 ),
                 card_col(
-                    card_title="Site Donate Rate",
+                    card_title="Avg. Attendance WOO",
                     card_val_id="card-12-enrollment",
                     color=color_palette[1],
-                    font_size="2vmax",
+                    font_size="1.25vmax",
                 ),
                 card_col(
-                    card_title="Site Contact Rate",
+                    card_title="Avg. Attendance WES",
                     card_val_id="card-13-enrollment",
                     color=color_palette[1],
-                    font_size="2vmax",
+                    font_size="1.25vmax",
                 ),
                 card_col(
-                    card_title="Email Subscription Rate",
+                    card_title="Cancellation Rate PVD",
                     card_val_id="card-14-enrollment",
                     color=color_palette[1],
-                    font_size="2vmax",
+                    font_size="1.25vmax",
                 ),
                 card_col(
-                    card_title="Email Engagement Rate",
+                    card_title="Cancellation Rate WOO",
                     card_val_id="card-15-enrollment",
                     color=color_palette[1],
-                    font_size="2vmax",
+                    font_size="1.25vmax",
                 ),
                 card_col(
-                    card_title="Facebook Engagement Rate",
+                    card_title="Cancellation Rate WES",
                     card_val_id="card-16-enrollment",
                     color=color_palette[1],
-                    font_size="2vmax",
+                    font_size="1.25vmax",
                 ),
             ],
             className="third-row",
@@ -229,6 +229,21 @@ layout = html.Div(
     ]
 )
 
+def avg_agg_column(params, col, table):
+    """
+    Helper function for finding the average of an aggregate column 
+
+    Args:
+        params(tuple): start date and end date in format 'YYYY-MM-DD'
+        col(str): name of column to find average of
+        table(str): name of table column is in
+
+    Return:
+        float: average of column during period
+    """
+    return agg.single_value_query(
+        f"SELECT ROUND(AVG({col}), 2) FROM {table} WHERE month BETWEEN ? AND ?", params
+    )
 
 @app.callback(Output("card-1-enrollment", "children"), [Input("time_range", "value")])
 def card_val_1_enrollment(time_range):
@@ -342,29 +357,71 @@ def card_val_10_enrollment(time_range):
 
 @app.callback(Output("card-11-enrollment", "children"), [Input("time_range", "value")])
 def card_val_11_enrollment(time_range):
-    return ""
+    return card_value(
+        time_range,
+        avg_agg_column,
+        "center_enrollment",
+        "pvd_actual_census",
+        left_number_right_spark,
+        ["pvd_actual_census", "center_enrollment"],
+    )
 
 
 @app.callback(Output("card-12-enrollment", "children"), [Input("time_range", "value")])
 def card_val_12_enrollment(time_range):
-    return ""
+    return card_value(
+        time_range,
+        avg_agg_column,
+        "center_enrollment",
+        "woon_actual_census",
+        left_number_right_spark,
+        ["woon_actual_census", "center_enrollment"],
+    )
 
 
 @app.callback(Output("card-13-enrollment", "children"), [Input("time_range", "value")])
 def card_val_13_enrollment(time_range):
-    return ""
+    return card_value(
+        time_range,
+        avg_agg_column,
+        "center_enrollment",
+        "wes_actual_census",
+        left_number_right_spark,
+        ["wes_actual_census", "center_enrollment"],
+    )
 
 
 @app.callback(Output("card-14-enrollment", "children"), [Input("time_range", "value")])
 def card_val_14_enrollment(time_range):
-    return ""
+    return card_value(
+        time_range,
+        avg_agg_column,
+        "center_enrollment",
+        "pvd_pace_cancelation_rate",
+        left_number_right_spark,
+        ["pvd_pace_cancelation_rate", "center_enrollment"],
+    )
 
 
 @app.callback(Output("card-15-enrollment", "children"), [Input("time_range", "value")])
 def card_val_15_enrollment(time_range):
-    return ""
+    return card_value(
+        time_range,
+        avg_agg_column,
+        "center_enrollment",
+        "woon_pace_cancelation_rate",
+        left_number_right_spark,
+        ["woon_pace_cancelation_rate", "center_enrollment"],
+    )
 
 
 @app.callback(Output("card-16-enrollment", "children"), [Input("time_range", "value")])
 def card_val_16_enrollment(time_range):
-    return ""
+    return card_value(
+        time_range,
+        avg_agg_column,
+        "center_enrollment",
+        "wes_pace_cancelation_rate",
+        left_number_right_spark,
+        ["wes_pace_cancelation_rate", "center_enrollment"],
+    )

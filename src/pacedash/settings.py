@@ -31,7 +31,7 @@ NAV_ITEMS = (
     ("enrollment", "Enrollment"),
     ("demographics", "Demographics"),
     ("incidents", "Incidents"),
-    ("operations", "Operations"),
+    # ("operations", "Operations"),
     ("utilization", "Utilization"),
 )
 
@@ -42,9 +42,14 @@ NAV_ITEMS = (
 ###for your databases
 path_prefix = Path().absolute()
 db_filepath = "src/pacedash/data/PaceDashboard.db"
-user_db = f"{path_prefix}/src/pacedash/data/users.db"
-log_path = "src/pacedash/data/log.txt"
+# user_db = f"{path_prefix}/src/pacedash/data/users.db"
+user_db = "V:/Databases/users.db"
+# log_path = "src/pacedash/data/log.txt"
+log_path = "V:/Databases/log.txt"
 agg_filepath = "src/pacedash/data/agg.db"
+
+# forgot password email
+forgot_pw_email = "asmith@pace-ri.org"
 
 SECRET_KEY = os.urandom(12)
 

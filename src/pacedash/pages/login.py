@@ -8,7 +8,8 @@ from werkzeug.security import check_password_hash
 
 from ..app import app, User
 from ..components import Row, Col
-from ..settings import color_palette, log_path
+from ..settings import color_palette, log_path, forgot_pw_email
+
 
 layout = html.Div(
     [
@@ -156,7 +157,7 @@ layout = html.Div(
                                     [
                                         html.A(
                                             "Forgot Password",
-                                            href="mailto:snelson@pace-ri.org?Subject=Forgot%20Password",
+                                            href=f"mailto:{forgot_pw_email}?Subject=Forgot%20Password",
                                             style={
                                                 "display": "flex",
                                                 "flex-direction": "row",

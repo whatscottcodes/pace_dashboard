@@ -33,9 +33,8 @@ def get_census(center_sql=""):
     conn = sqlite3.connect(db_filepath)
     c = conn.cursor()
 
-    census_query = f"""SELECT COUNT(enrollment.member_id)
+    census_query = f"""SELECT COUNT(DISTINCT(enrollment.member_id))
     FROM enrollment
-    JOIN centers on enrollment.member_id=centers.member_id
     WHERE enrollment_date <= date('now')
     AND disenrollment_date IS NULL
     {center_sql};    

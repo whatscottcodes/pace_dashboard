@@ -6,6 +6,7 @@ from ..settings import color_palette
 from ..app import app
 from ..components import Row, Col
 from ..login_utils import redirect_to_login
+from ..settings import forgot_pw_email
 
 # Create app layout
 layout = html.Div(
@@ -97,7 +98,7 @@ layout = html.Div(
                                     [
                                         html.A(
                                             "Forgot Password",
-                                            href="mailto:snelson@pace-ri.org?Subject=Forgot%20Password",
+                                            href=f"mailto:{forgot_pw_email}?Subject=Forgot%20Password",
                                             style={
                                                 "display": "flex",
                                                 "flex-direction": "row",

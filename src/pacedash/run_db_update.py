@@ -14,8 +14,7 @@ def update_db():
         "E:/pace_dash/src/pacedash/data/PaceDashboard.db",
     )
     shutil.copy2("V:/Databases/agg.db", "E:/pace_dash/src/pacedash/data/agg.db")
-    shutil.copy2("E:/pace_dash/src/pacedash/data/users.db", "V:/Databases/users.db")
-    shutil.copy2("E:/pace_dash/src/pacedash/data/log.txt", "V:/Databases/log.txt")
+
     print("Updated DB")
 
 
