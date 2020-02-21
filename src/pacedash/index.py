@@ -46,7 +46,6 @@ urls = (
     ("utilization", inpatient.layout),
     ("inpatient", inpatient.layout),
     ("nursing-facility", nursing_facilities.layout),
-    ("operations", operations.layout),
     ("teams", teams.layout),
     ("enrollment-eda", enrollment_eda.layout),
     ("demographics-eda", demographics_eda.layout),
